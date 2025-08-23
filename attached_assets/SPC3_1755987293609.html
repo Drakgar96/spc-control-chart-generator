@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPC Control Chart Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js library for creating interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom scrollbar for better aesthetics */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .part-image {
+            max-width: 300px;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+        .chart-container canvas {
+            max-height: 280px !important;
+            height: 280px !important;
+            width: 100% !important;
+        }
+        
+        /* Ensure chart visibility during PDF capture */
+        canvas {
+            background-color: transparent !important;
+            display: block !important;
+        }
+        
+        /* Page break helpers for PDF export */
+        .page-break-before {
+            page-break-before: always;
+        }
+        
+        .page-break-after {
+            page-break-after: always;
+        }
+        
+        .keep-together {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            
+            /* PDF-specific styling for smaller charts and better page utilization */
+            .chart-container {
+                height: 250px !important;
+                margin: 8px 0 !important;
+            }
+            .chart-container canvas {
+                max-height: 250px !important;
+                height: 250px !important;
+            }
+            
+            /* Reduce spacing between elements in PDF */
+            .space-y-4 > * + * {
+                margin-top: 12px !important;
+            }
+            .space-y-6 > * + * {
+                margin-top: 16px !important;
+            }
+            
+            /* Make statistical results more compact for PDF */
+            .grid.gap-2 {
+                gap: 4px !important;
+            }
+            
+            /* Force specific PDF layout regardless of screen size */
+            .pdf-page-1 {
+                display: block !important;
+                page-break-after: always;
+            }
+            
+            .pdf-page-2 {
+                display: block !important;
+                page-break-before: always;
+            }
+            
+            /* Override responsive grid for PDF to ensure consistent layout */
+            .pdf-charts-page-1 .chart-container {
+                width: 100% !important;
+                display: block !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .pdf-charts-page-2 .chart-container {
+                width: 100% !important;
+                display: block !important;
+                margin-bottom: 20px !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-700 font-medium">Generating PDF...</p>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-lg p-6 sm:p-10 border border-gray-200">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2 no-print">SPC Control Chart Generator</h1>
+        <p class="text-center text-gray-500 mb-8 no-print">Analyze multiple characteristics at once.</p>
+
+        <!-- Document Control Section -->
+        <div class="mb-8 bg-gray-50 p-6 rounded-lg border">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Document Control Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="documentNumber" class="block text-sm font-medium text-gray-700 mb-1">Document Number</label>
+                    <input type="text" id="documentNumber" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 no-print" placeholder="MTU-SPC-001">
+                    <span class="print-only hidden">MTU-SPC-001</span>
+                </div>
+                <div>
+                    <label for="revisionNumber" class="block text-sm font-medium text-gray-700 mb-1">Revision Number</label>
+                    <input type="text" id="revisionNumber" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 no-print" placeholder="Rev. 1.0">
+                    <span class="print-only hidden">1.0</span>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Prepared By</label>
+                    <input type="text" value="Edgar Contreras" readonly class="w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 no-print">
+                    <span class="print-only hidden">Edgar Contreras</span>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Approved By</label>
+                    <input type="text" value="Steven Rogoski" readonly class="w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 no-print">
+                    <span class="print-only hidden">Steven Rogoski</span>
+                </div>
+                <div>
+                    <label for="effectiveDate" class="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
+                    <input type="date" id="effectiveDate" readonly class="w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 no-print">
+                    <span class="print-only hidden"></span>
+                </div>
+                <div>
+                    <label for="reportStartDate" class="block text-sm font-medium text-gray-700 mb-1">Report Valid From</label>
+                    <input type="date" id="reportStartDate" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 no-print">
+                    <span class="print-only hidden"></span>
+                </div>
+                <div>
+                    <label for="reportEndDate" class="block text-sm font-medium text-gray-700 mb-1">Report Valid To</label>
+                    <input type="date" id="reportEndDate" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 no-print">
+                    <span class="print-only hidden"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part Selector Section with Image -->
+        <div class="mb-8">
+            <div class="flex flex-col lg:flex-row gap-6">
+                <div class="flex-1">
+                    <label for="partSelector" class="block text-sm font-medium text-gray-700 mb-2">Select Part to Analyze</label>
+                    <select id="partSelector" class="w-full rounded-md border-gray-300 shadow-sm p-3 text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out no-print">
+                        <option value="default">Custom Characteristics (Default)</option>
+                        <option value="axle-profile">Axle Profile HY10 - 148 253</option>
+                        <option value="lamella-profile">Lamella Profile HY10 - 123 257</option>
+                        <option value="rh-side-profile">RH Side Profile HY10 - 142 942</option>
+                        <option value="lh-side-profile">LH Side Profile HY10 - 142 943</option>
+                        <option value="lid-profile">Lid Profile HY10 - 142 421</option>
+                        <option value="front-profile">Front Profile HY10 - 142 408</option>
+                        <option value="rear-profile">Rear Profile HY10 - 142 221</option>
+                    </select>
+                    <div class="print-only hidden mt-2">
+                        <span class="font-medium text-gray-700">Analyzed Part: </span>
+                        <span id="selectedPartName"></span>
+                    </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Part Image</label>
+                    <div class="w-full lg:w-80 h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                        <img id="partImage" class="part-image hidden" alt="Part Image">
+                        <div id="partImagePlaceholder" class="text-center text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="mt-2">Select a part to view image</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Control Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8 no-print">
+            <button id="addNewCharacteristicBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                Add New Characteristic
+            </button>
+            <button id="generateAllBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                Generate All Charts
+            </button>
+            <button id="exportPdfBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                Export to PDF
+            </button>
+            <button id="resetAllBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-150 ease-in-out">
+                Reset All
+            </button>
+        </div>
+
+        <!-- Status and Message Display -->
+        <div id="statusMessage" class="text-center text-sm font-medium rounded-md p-3 mb-8 hidden"></div>
+        
+        <!-- Summary Section -->
+        <div id="summarySection" class="mb-8 bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Process Capability Summary</h2>
+            <div id="summaryContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Summary cards will be populated here -->
+            </div>
+        </div>
+        
+        <!-- Container for all characteristics -->
+        <div id="characteristicsContainer" class="space-y-12">
+            <!-- Characteristic cards will be added here dynamically -->
+        </div>
+
+    </div>
+
+    <script>
+        // Global variables and a unique ID counter for dynamic elements
+        const characteristicsData = {};
+        let characteristicCounter = 0;
+        const chartInstances = {};
+
+        // DOM elements
+        const partSelector = document.getElementById('partSelector');
+        const partImage = document.getElementById('partImage');
+        const partImagePlaceholder = document.getElementById('partImagePlaceholder');
+        const addNewCharacteristicBtn = document.getElementById('addNewCharacteristicBtn');
+        const generateAllBtn = document.getElementById('generateAllBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const resetAllBtn = document.getElementById('resetAllBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const characteristicsContainer = document.getElementById('characteristicsContainer');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const summarySection = document.getElementById('summarySection');
+        const summaryContent = document.getElementById('summaryContent');
+        
+        // Part images mapping
+        const PART_IMAGES = {
+            'default': null,
+            'axle-profile': 'https://drive.google.com/thumbnail?id=10pDdEq7ur5BwYiKwR0L9uYyQphysJlbN&sz=w1000',
+            'lamella-profile': 'https://drive.google.com/thumbnail?id=1d_96kHTQjRFqNrPrAeeMe037KgnXfwL0&sz=w1000',
+            'rh-side-profile': 'https://drive.google.com/thumbnail?id=1fs3C2Le43kl2u4qQ30xu-23iEm3kFqzG&sz=w1000',
+            'lh-side-profile': 'https://drive.google.com/thumbnail?id=1CC0puIR6yfMEh6G4cXjOePl08qrlV0zH&sz=w1000',
+            'lid-profile': 'https://drive.google.com/thumbnail?id=13fDJNLHItmOlOAGYOqbjG5DfjHheTlWw&sz=w1000',
+            'front-profile': 'https://drive.google.com/thumbnail?id=1spCqCtuj73d20YLhg9qbtNVsPp8qdnMp&sz=w1000',
+            'rear-profile': 'https://drive.google.com/thumbnail?id=1P5IWM78GxsqczU0deiLGB46Mw7WGBFZz&sz=w1000'
+        };
+        
+        // A simple lookup table for constants based on subgroup size (n).
+        const CONSTANTS = {
+            2: { A2: 1.880, D3: 0, D4: 3.267, d2: 1.128 },
+            3: { A2: 1.023, D3: 0, D4: 2.574, d2: 1.693 },
+            4: { A2: 0.729, D3: 0, D4: 2.282, d2: 2.059 },
+            5: { A2: 0.577, D3: 0, D4: 2.114, d2: 2.326 },
+            6: { A2: 0.483, D3: 0, D4: 2.004, d2: 2.534 },
+            7: { A2: 0.419, D3: 0.076, D4: 1.924, d2: 2.704 },
+            8: { A2: 0.373, D3: 0.136, D4: 1.864, d2: 2.847 },
+            9: { A2: 0.337, D3: 0.184, D4: 1.816, d2: 2.970 },
+            10: { A2: 0.308, D3: 0.223, D4: 1.777, d2: 3.078 },
+        };
+
+        // Predefined parts and their characteristics
+        const PART_CONFIGS = {
+            'default': [
+                {
+                    name: 'Variable Characteristic',
+                    type: 'variable',
+                    initialValues: { subgroupSize: '4', usl: '1253.5', lsl: '1252.5', nominalValue: '1253', data: '1252.98, 1252.88, 1252.78, 1252.97\n1252.6, 1249.19, 1252.77, 1253.19\n1253.1, 1252.89, 1253, 1253\n1252.9, 1252.88, 1253.1, 1253.38\n1253.12, 1252.64, 1252.8, 1252.88\n1252.66, 1252.57, 1252.62, 1252.5' }
+                },
+                {
+                    name: 'Attribute Characteristic',
+                    type: 'attribute',
+                    initialValues: { subgroupSize: '100', usl: null, lsl: null, nominalValue: null, data: '100,5\n100,6\n100,4\n100,3\n100,7\n100,6\n100,5\n100,8\n100,4\n100,5' }
+                }
+            ],
+            'axle-profile': [
+                {name: 'Measured Length',type: 'variable',initialValues: { subgroupSize: '5', usl: '1253.5', lsl: '1252.5', nominalValue: '1253', data: '1253.1, 1253.2, 1253.0, 1253.8, 1253.3\n1253.9, 1253.1, 1253.0, 1253.2, 1253.1\n1253.3, 1253.4, 1253.1, 1253.9, 1253.0\n1253.0, 1253.2, 1253.3, 1253.7, 1253.1\n1253.2, 1253.9, 1253.0, 1253.1, 1253.2' }},
+                {name: 'Surface free and straight edges',type: 'attribute',initialValues: { subgroupSize: '200', usl: null, lsl: null, nominalValue: null, data: '200,3\n200,4\n200,2\n200,5\n200,3\n200,4\n200,3\n200,6\n200,2\n200,3' }},
+                {name: 'No burrs on the edges',type: 'attribute',initialValues: { subgroupSize: '200', usl: null, lsl: null, nominalValue: null, data: '200,1\n200,0\n200,1\n200,2\n200,0\n200,1\n200,1\n200,0\n200,2\n200,1' }}
+            ],
+            'lamella-profile': [
+                {name: 'Measured Length',type: 'variable',initialValues: { subgroupSize: '4', usl: '1258', lsl: '1256', nominalValue: '1257', data: '1257.01, 1257.05, 1257.98, 1257.02\n1257.03, 1257.99, 1257.01, 1257.00\n1257.04, 1257.06, 1257.00, 1257.02\n1257.97, 1257.00, 1257.01, 1257.03' }},
+                {name: 'Surface dent free and paint covered',type: 'attribute',initialValues: { subgroupSize: '150', usl: null, lsl: null, nominalValue: null, data: '150,2\n150,1\n150,3\n150,2\n150,1\n150,2\n150,0\n150,3\n150,1\n150,2' }},
+                {name: 'Fix 332 Lamella Thread',type: 'attribute',initialValues: { subgroupSize: '150', usl: null, lsl: null, nominalValue: null, data: '150,0\n150,1\n150,0\n150,0\n150,0\n150,1\n150,0\n150,0\n150,1\n150,0' }}
+            ],
+            'rh-side-profile': [
+                { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1188.5', usl: '1189.2', lsl: '1187.8', data: '1188.6, 1188.5, 1188.4, 1188.7\n1188.5, 1188.8, 1188.5, 1188.6\n1188.4, 1188.3, 1188.6, 1188.5\n1188.7, 1188.6, 1188.5, 1188.4' } },
+                { name: 'Final Lock Slot to Flush Cut Distance (Q. E1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '78', usl: '78.3', lsl: '77.7', data: '78.1, 78.0, 78.2, 77.9\n78.0, 78.1, 78.1, 78.0\n78.2, 78.1, 78.0, 78.1\n78.0, 77.9, 78.1, 78.2' } },
+                { name: 'Middle Lock Slot Width (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '14.8', usl: '14.9', lsl: '14.7', data: '14.82, 14.80, 14.81, 14.79\n14.80, 14.83, 14.80, 14.81\n14.78, 14.80, 14.81, 14.82\n14.80, 14.79, 14.80, 14.81' } },
+                { name: 'Middle Lock Slot Height (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '8', usl: '8.2', lsl: '7.8', data: '8.05, 8.10, 8.00, 7.95\n8.02, 8.05, 8.01, 7.99\n8.10, 8.08, 8.05, 8.02\n8.00, 7.98, 8.01, 8.03' } },
+                { name: 'Final Lock Slot Width (Q. F2)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '28', usl: '28.2', lsl: '27.8', data: '28.1, 28.0, 28.2, 27.9\n28.0, 28.1, 28.1, 28.0\n27.9, 28.0, 28.1, 28.2\n28.0, 27.9, 28.0, 28.1' } },
+                { name: 'Final Lock Slot Height Location Distance (Q. F2)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '15.1', usl: '15.3', lsl: '14.9', data: '15.15, 15.10, 15.12, 15.08\n15.11, 15.14, 15.10, 15.13\n15.05, 15.09, 15.10, 15.11\n15.10, 15.12, 15.11, 15.09' } },
+                { name: 'Final Lock Slot to Rear Side Distance (Q. F1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '50', usl: '50.3', lsl: '49.7', data: '50.1, 50.0, 50.2, 49.9\n50.0, 50.1, 50.1, 50.0\n49.9, 50.0, 50.1, 50.2\n50.0, 49.9, 50.0, 50.1' } },
+                { name: 'Distance between Final and Middle Lock Slots (Q. E3)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '377.2', usl: '377.7', lsl: '376.7', data: '377.3, 377.1, 377.4, 377.0\n377.2, 377.5, 377.1, 377.3\n377.0, 377.2, 377.3, 377.4\n377.1, 377.3, 377.2, 377.0' } },
+                { name: 'Machined Slot Width for Carpet Width (Q. E7)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '160.9', usl: '161.4', lsl: '160.4', data: '160.9, 161.0, 160.8, 160.9\n161.0, 161.1, 160.9, 160.8\n160.7, 160.9, 161.0, 161.1\n160.9, 160.8, 160.9, 161.0' } },
+                { name: 'Machined Slot for Canister Hole (Q. C7)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '36', usl: '36.3', lsl: '35.7', data: '36.1, 36.0, 36.2, 35.9\n36.0, 36.1, 36.1, 36.0\n35.9, 36.0, 36.1, 36.2\n36.0, 35.9, 36.0, 36.1' } },
+                { name: 'Machined Slot for Canister Hole (Q. C6)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '36', usl: '36.3', lsl: '35.7', data: '36.1, 36.0, 36.2, 35.9\n36.0, 36.1, 36.1, 36.0\n35.9, 36.0, 36.1, 36.2\n36.0, 35.9, 36.0, 36.1' } },
+                { name: 'Machined Slot Height for Canister Hole (Q. C7)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '16', usl: '16.2', lsl: '15.8', data: '16.1, 16.0, 16.2, 15.9\n16.0, 16.1, 16.1, 16.0\n15.9, 16.0, 16.1, 16.2\n16.0, 15.9, 16.0, 16.1' } },
+                { name: 'Surface Free of Dents, Scratches and/or Metal Shavings', type: 'attribute', initialValues: { subgroupSize: '200', data: '200,2\n200,3\n200,1\n200,4\n200,2\n200,3\n200,2\n200,1\n200,3\n200,2' } },
+                { name: 'Channel Validation Tool Sliding', type: 'attribute', initialValues: { subgroupSize: '200', data: '200,0\n200,1\n200,0\n200,0\n200,1\n200,0\n200,0\n200,1\n200,0\n200,0' } }
+            ],
+            'lh-side-profile': [
+                { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1188.5', usl: '1189.2', lsl: '1187.8', data: '1188.6, 1188.5, 1188.4, 1188.7\n1188.5, 1188.8, 1188.5, 1188.6\n1188.4, 1188.3, 1188.6, 1188.5\n1188.7, 1188.6, 1188.5, 1188.4' } },
+                { name: 'Final Lock Slot to Flush Cut Distance (Q. E1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '78', usl: '78.3', lsl: '77.7', data: '78.1, 78.0, 78.2, 77.9\n78.0, 78.1, 78.1, 78.0\n78.2, 78.1, 78.0, 78.1\n78.0, 77.9, 78.1, 78.2' } },
+                { name: 'Middle Lock Slot Width (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '14.8', usl: '14.9', lsl: '14.7', data: '14.82, 14.80, 14.81, 14.79\n14.80, 14.83, 14.80, 14.81\n14.78, 14.80, 14.81, 14.82\n14.80, 14.79, 14.80, 14.81' } },
+                { name: 'Middle Lock Slot Height (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '8', usl: '8.2', lsl: '7.8', data: '8.05, 8.10, 8.00, 7.95\n8.02, 8.05, 8.01, 7.99\n8.10, 8.08, 8.05, 8.02\n8.00, 7.98, 8.01, 8.03' } },
+                { name: 'Final Lock Slot Width (Q. F2)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '28', usl: '28.2', lsl: '27.8', data: '28.1, 28.0, 28.2, 27.9\n28.0, 28.1, 28.1, 28.0\n27.9, 28.0, 28.1, 28.2\n28.0, 27.9, 28.0, 28.1' } },
+                { name: 'Final Lock Slot Height Location Distance (Q. F2)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '15.1', usl: '15.3', lsl: '14.9', data: '15.15, 15.10, 15.12, 15.08\n15.11, 15.14, 15.10, 15.13\n15.05, 15.09, 15.10, 15.11\n15.10, 15.12, 15.11, 15.09' } },
+                { name: 'Final Lock Slot to Rear Side Distance (Q. F1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '50', usl: '50.3', lsl: '49.7', data: '50.1, 50.0, 50.2, 49.9\n50.0, 50.1, 50.1, 50.0\n49.9, 50.0, 50.1, 50.2\n50.0, 49.9, 50.0, 50.1' } },
+                { name: 'Distance between Final and Middle Lock Slots (Q. E3)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '377.2', usl: '377.7', lsl: '376.7', data: '377.3, 377.1, 377.4, 377.0\n377.2, 377.5, 377.1, 377.3\n377.0, 377.2, 377.3, 377.4\n377.1, 377.3, 377.2, 377.0' } },
+                { name: 'Machined Slot Width for Carpet Width (Q. E7)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '160.9', usl: '161.4', lsl: '160.4', data: '160.9, 161.0, 160.8, 160.9\n161.0, 161.1, 160.9, 160.8\n160.7, 160.9, 161.0, 161.1\n160.9, 160.8, 160.9, 161.0' } },
+                { name: 'Machined Slot for Canister Hole (Q. C7)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '36', usl: '36.3', lsl: '35.7', data: '36.1, 36.0, 36.2, 35.9\n36.0, 36.1, 36.1, 36.0\n35.9, 36.0, 36.1, 36.2\n36.0, 35.9, 36.0, 36.1' } },
+                { name: 'Machined Slot for Canister Hole (Q. C6)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '36', usl: '36.3', lsl: '35.7', data: '36.1, 36.0, 36.2, 35.9\n36.0, 36.1, 36.1, 36.0\n35.9, 36.0, 36.1, 36.2\n36.0, 35.9, 36.0, 36.1' } },
+                { name: 'Machined Slot Height for Canister Hole (Q. C7)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '16', usl: '16.2', lsl: '15.8', data: '16.1, 16.0, 16.2, 15.9\n16.0, 16.1, 16.1, 16.0\n15.9, 16.0, 16.1, 16.2\n16.0, 15.9, 16.0, 16.1' } },
+                { name: 'Surface Free of Dents, Scratches and/or Metal Shavings', type: 'attribute', initialValues: { subgroupSize: '200', data: '200,2\n200,3\n200,1\n200,4\n200,2\n200,3\n200,2\n200,1\n200,3\n200,2' } },
+                { name: 'Channel Validation Tool Sliding', type: 'attribute', initialValues: { subgroupSize: '200', data: '200,0\n200,1\n200,0\n200,0\n200,1\n200,0\n200,0\n200,1\n200,0\n200,0' } }
+            ],
+            'lid-profile': [
+                { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1217.5', usl: '1218.2', lsl: '1216.8', data: '1217.6, 1217.5, 1217.4, 1217.7\n1217.5, 1217.8, 1217.5, 1217.6\n1217.4, 1217.3, 1217.6, 1217.5' } },
+                { name: 'Length from Rear of Lid to LH Hole Center', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '115', usl: '115.3', lsl: '114.7', data: '115.1, 115.0, 115.2, 114.9\n115.0, 115.1, 115.1, 115.0\n114.9, 115.0, 115.1, 115.2' } },
+                { name: 'Length from Rear of Lid to RH Hole Center', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '115', usl: '115.3', lsl: '114.7', data: '115.1, 115.0, 115.2, 114.9\n115.0, 115.1, 115.1, 115.0\n114.9, 115.0, 115.1, 115.2' } },
+                { name: 'Length from Edge to LH Hole', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '10.3', usl: '10.5', lsl: '10.1', data: '10.35, 10.30, 10.32, 10.28\n10.31, 10.34, 10.30, 10.33\n10.25, 10.29, 10.30, 10.31' } },
+                { name: 'Length from Edge to RH Hole', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '10.3', usl: '10.5', lsl: '10.1', data: '10.35, 10.30, 10.32, 10.28\n10.31, 10.34, 10.30, 10.33\n10.25, 10.29, 10.30, 10.31' } },
+                { name: 'LH Hole Internal Diameter', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '7', usl: '7.2', lsl: '6.8', data: '7.05, 7.10, 7.00, 6.95\n7.02, 7.05, 7.01, 6.99\n7.10, 7.08, 7.05, 7.02' } },
+                { name: 'RH Hole Internal Diameter', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '7', usl: '7.2', lsl: '6.8', data: '7.05, 7.10, 7.00, 6.95\n7.02, 7.05, 7.01, 6.99\n7.10, 7.08, 7.05, 7.02' } },
+                { name: 'Surface Free of Scratches, Dents & Evenly Painted/Covered', type: 'attribute', initialValues: { subgroupSize: '150', data: '150,1\n150,2\n150,0\n150,1\n150,1\n150,2\n150,0\n150,1\n150,0\n150,1' } }
+            ],
+            'front-profile': [
+                { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1324', usl: '1324.7', lsl: '1323.3', data: '1324.1, 1324.0, 1323.8, 1324.2\n1324.0, 1324.3, 1324.1, 1323.9\n1323.8, 1324.0, 1324.2, 1324.1' } },
+                { name: 'Internal Diameter of LH Side Hole (Q. D7)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '9.5', usl: '10.0', lsl: '9.0', data: '9.6, 9.5, 9.7, 9.4\n9.5, 9.6, 9.5, 9.4\n9.7, 9.5, 9.6, 9.4' } },
+                { name: 'Internal Diameter of Middle Hole', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '9.5', usl: '10.0', lsl: '9.0', data: '9.6, 9.5, 9.7, 9.4\n9.5, 9.6, 9.5, 9.4\n9.7, 9.5, 9.6, 9.4' } },
+                { name: 'Internal Diameter of RH Side Hole (Q. E4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '9.5', usl: '10.0', lsl: '9.0', data: '9.6, 9.5, 9.7, 9.4\n9.5, 9.6, 9.5, 9.4\n9.7, 9.5, 9.6, 9.4' } },
+                { name: 'Length from Edge to RH Hole', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '9.5', usl: '10.0', lsl: '9.0', data: '9.6, 9.5, 9.7, 9.4\n9.5, 9.6, 9.5, 9.4\n9.7, 9.5, 9.6, 9.4' } },
+                { name: 'Measurement of Processed Cut and Side', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '5', usl: '5.2', lsl: '4.8', data: '5.1, 5.0, 5.2, 4.9\n5.0, 5.1, 5.1, 5.0\n4.9, 5.0, 5.1, 5.2' } },
+                { name: 'Distance between LH Hole Center and Middle Hole Center', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '600', usl: '600.3', lsl: '599.7', data: '600.1, 600.0, 600.2, 599.9\n600.0, 600.1, 600.1, 600.0\n599.9, 600.0, 600.1, 600.2' } },
+                { name: 'Fixture 321 Hole Size/Location Check', type: 'attribute', initialValues: { subgroupSize: '150', data: '150,0\n150,1\n150,0\n150,0\n150,0\n150,1\n150,0\n150,0\n150,1\n150,0' } }
+            ],
+            'rear-profile': [
+                { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1157.5', usl: '1158.2', lsl: '1156.8', data: '1157.6, 1157.5, 1157.4, 1157.7\n1157.5, 1157.8, 1157.5, 1157.6\n1157.4, 1157.3, 1157.6, 1157.5' } },
+                { name: 'Lock Hole in Machined Track to Side of Bottom', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '11.1', usl: '11.35', lsl: '10.85', data: '11.15, 11.10, 11.20, 11.05\n11.12, 11.15, 11.11, 11.08\n11.10, 11.08, 11.12, 11.14' } },
+                { name: 'Internal Diameter of LH Hole (Q. E5)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '13', usl: '13.3', lsl: '12.7', data: '13.1, 13.0, 13.2, 12.9\n13.0, 13.1, 13.1, 13.0\n12.9, 13.0, 13.1, 13.2' } },
+                { name: 'Internal Diameter of RH Hole (Q. E4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '13', usl: '13.3', lsl: '12.7', data: '13.1, 13.0, 13.2, 12.9\n13.0, 13.1, 13.1, 13.0\n12.9, 13.0, 13.1, 13.2' } },
+                { name: 'Distance from Lock Hole to Bottom Side', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '14.11', usl: '14.36', lsl: '13.86', data: '14.15, 14.10, 14.20, 14.05\n14.12, 14.15, 14.11, 14.08\n14.10, 14.08, 14.12, 14.14' } },
+                { name: 'Internal Diameter of Hole (Q. B4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '9.6', usl: '9.9', lsl: '9.3', data: '9.7, 9.6, 9.8, 9.5\n9.6, 9.7, 9.6, 9.5\n9.8, 9.6, 9.7, 9.5' } },
+                { name: 'Internal Diameter of Hole (Q. B5)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '9.6', usl: '9.9', lsl: '9.3', data: '9.7, 9.6, 9.8, 9.5\n9.6, 9.7, 9.6, 9.5\n9.8, 9.6, 9.7, 9.5' } },
+                { name: 'Distance between End of Left Side of Rear Profile to Latch Opening', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '457.2', usl: '457.5', lsl: '456.9', data: '457.3, 457.1, 457.4, 457.0\n457.2, 457.5, 457.1, 457.3\n457.0, 457.2, 457.3, 457.4' } },
+                { name: 'Distance between End of Right Side of Rear Profile to Latch Opening', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '457.2', usl: '457.5', lsl: '456.9', data: '457.3, 457.1, 457.4, 457.0\n457.2, 457.5, 457.1, 457.3\n457.0, 457.2, 457.3, 457.4' } },
+                { name: 'Surface Free of Dents and Scratches', type: 'attribute', initialValues: { subgroupSize: '150', data: '150,3\n150,2\n150,4\n150,3\n150,2\n150,3\n150,1\n150,4\n150,2\n150,3' } }
+            ]
+        };
+
+        // Initialize date fields with current date
+        function initializeDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('effectiveDate').value = today;
+            document.getElementById('reportStartDate').value = today;
+            
+            // Set end date to one month from today
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            document.getElementById('reportEndDate').value = nextMonth.toISOString().split('T')[0];
+        }
+
+        // Update part image based on selection
+        function updatePartImage(partValue) {
+            const imageUrl = PART_IMAGES[partValue];
+            const selectedPartName = document.getElementById('selectedPartName');
+            selectedPartName.textContent = partSelector.options[partSelector.selectedIndex].text;
+            
+            if (imageUrl) {
+                partImage.src = imageUrl;
+                partImage.onload = function() {
+                    partImage.classList.remove('hidden');
+                    partImagePlaceholder.classList.add('hidden');
+                };
+                partImage.onerror = function() {
+                    partImage.classList.add('hidden');
+                    partImagePlaceholder.classList.remove('hidden');
+                };
+            } else {
+                partImage.classList.add('hidden');
+                partImagePlaceholder.classList.remove('hidden');
+            }
+        }
+
+        // Event listeners
+        addNewCharacteristicBtn.addEventListener('click', () => {
+            addNewCharacteristic();
+        });
+
+        generateAllBtn.addEventListener('click', () => {
+            generateAllCharts();
+        });
+
+        exportPdfBtn.addEventListener('click', () => {
+            exportToPDF();
+        });
+
+        resetAllBtn.addEventListener('click', () => {
+            resetAll();
+        });
+
+        partSelector.addEventListener('change', (e) => {
+            const selectedPart = e.target.value;
+            updatePartImage(selectedPart);
+            loadPartConfiguration(selectedPart);
+        });
+
+        // Modified PDF Export functionality - Summary moved to second page
+        async function exportToPDF() {
+            try {
+                loadingOverlay.classList.remove('hidden');
+                
+                // Update print-only elements with current values
+                updatePrintElements();
+                
+                // Temporarily show print-only elements and hide no-print elements
+                const printOnlyElements = document.querySelectorAll('.print-only');
+                const noPrintElements = document.querySelectorAll('.no-print');
+                
+                printOnlyElements.forEach(el => el.classList.remove('hidden'));
+                noPrintElements.forEach(el => el.style.display = 'none');
+                
+                // Wait for all charts to be fully rendered
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Force chart update and ensure proper rendering for PDF capture
+                console.log('Forcing chart updates for PDF capture...');
+                Object.keys(chartInstances).forEach(chartId => {
+                    const chart = chartInstances[chartId];
+                    if (chart && typeof chart.update === 'function') {
+                        console.log('Updating chart:', chartId);
+                        chart.update('none');
+                        chart.render();
+                    }
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Increased wait time
+                
+                // Section-based PDF generation for Letter size with narrow margins
+                console.log('Starting PDF generation...');
+                const { jsPDF } = window.jspdf;
+                let pdf = new jsPDF('p', 'mm', 'letter'); // Letter size: 216 x 279 mm
+                
+                try {
+                    // Page dimensions for Letter size with narrow margins
+                    const imgWidth = 206; // Letter width (216mm) minus 10mm margins
+                    const pageHeight = 269; // Letter height (279mm) minus 10mm margins
+                    let isFirstPage = true;
+                    
+                    // PAGE 1: Document Control + Part (EXCLUDING SUMMARY)
+                    console.log('Capturing first page sections (Document Control + Part)...');
+                    
+                    // Create a container for first page content without summary
+                    const firstPageContainer = document.createElement('div');
+                    firstPageContainer.style.position = 'fixed';
+                    firstPageContainer.style.top = '-9999px';
+                    firstPageContainer.style.left = '0';
+                    firstPageContainer.style.width = '210mm'; // Fixed width for consistent PDF layout
+                    firstPageContainer.style.backgroundColor = '#ffffff';
+                    firstPageContainer.style.padding = '0';
+                    firstPageContainer.style.margin = '0';
+                    
+                    // Document Control section
+                    const docControlSection = document.querySelector('div.mb-8.bg-gray-50');
+                    if (docControlSection && !docControlSection.classList.contains('hidden')) {
+                        console.log('Found document control section');
+                        const docClone = docControlSection.cloneNode(true);
+                        docClone.style.marginBottom = '10px';
+                        firstPageContainer.appendChild(docClone);
+                    }
+                    
+                    // Part selection section
+                    const partSection = document.querySelector('#partSelector').closest('.mb-8');
+                    if (partSection && !partSection.classList.contains('hidden')) {
+                        console.log('Found part selection section');
+                        const partClone = partSection.cloneNode(true);
+                        partClone.style.marginBottom = '10px';
+                        firstPageContainer.appendChild(partClone);
+                    }
+                    
+                    // Add container to body temporarily
+                    document.body.appendChild(firstPageContainer);
+                    
+                    // Capture the first page (without summary)
+                    const firstPageCanvas = await html2canvas(firstPageContainer, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        height: firstPageContainer.scrollHeight,
+                        width: firstPageContainer.scrollWidth
+                    });
+                    
+                    // Remove temporary container
+                    document.body.removeChild(firstPageContainer);
+                    
+                    // Calculate proper dimensions for first page
+                    const firstPageImgData = firstPageCanvas.toDataURL('image/png');
+                    const firstPageImgProps = pdf.getImageProperties(firstPageImgData);
+                    const firstPageImgHeight = (firstPageImgProps.height * imgWidth) / firstPageImgProps.width;
+                    
+                    // Add first page
+                    if (firstPageImgHeight <= pageHeight) {
+                        pdf.addImage(firstPageImgData, 'PNG', 5, 5, imgWidth, firstPageImgHeight);
+                    } else {
+                        const ratio = pageHeight / firstPageImgHeight;
+                        pdf.addImage(firstPageImgData, 'PNG', 5, 5, imgWidth * ratio, pageHeight);
+                    }
+
+                    // PAGE 2: Process Capability Summary ONLY
+                    console.log('Capturing summary section for second page...');
+                    const summarySection = document.getElementById('summarySection');
+                    if (summarySection && !summarySection.classList.contains('hidden')) {
+                        pdf.addPage(); // Add second page
+                        
+                        // Create a container for summary section only
+                        const summaryPageContainer = document.createElement('div');
+                        summaryPageContainer.style.position = 'fixed';
+                        summaryPageContainer.style.top = '-9999px';
+                        summaryPageContainer.style.left = '0';
+                        summaryPageContainer.style.width = '210mm';
+                        summaryPageContainer.style.backgroundColor = '#ffffff';
+                        summaryPageContainer.style.padding = '0';
+                        summaryPageContainer.style.margin = '0';
+                        
+                        const summaryClone = summarySection.cloneNode(true);
+                        summaryClone.style.marginBottom = '0';
+                        summaryPageContainer.appendChild(summaryClone);
+                        
+                        // Add container to body temporarily
+                        document.body.appendChild(summaryPageContainer);
+                        
+                        // Capture the summary page
+                        const summaryCanvas = await html2canvas(summaryPageContainer, {
+                            scale: 2,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            height: summaryPageContainer.scrollHeight,
+                            width: summaryPageContainer.scrollWidth
+                        });
+                        
+                        // Remove temporary container
+                        document.body.removeChild(summaryPageContainer);
+                        
+                        // Calculate proper dimensions for summary
+                        const summaryImgData = summaryCanvas.toDataURL('image/png');
+                        const summaryImgProps = pdf.getImageProperties(summaryImgData);
+                        const summaryImgHeight = (summaryImgProps.height * imgWidth) / summaryImgProps.width;
+                        
+                        // Add summary to second page
+                        if (summaryImgHeight <= pageHeight) {
+                            pdf.addImage(summaryImgData, 'PNG', 5, 5, imgWidth, summaryImgHeight);
+                        } else {
+                            const ratio = pageHeight / summaryImgHeight;
+                            pdf.addImage(summaryImgData, 'PNG', 5, 5, imgWidth * ratio, pageHeight);
+                        }
+                    }
+
+                    // FOLLOWING PAGES: Individual characteristic charts
+                    console.log('Capturing individual characteristics...');
+                    const characteristics = document.querySelectorAll('#characteristicsContainer > div');
+                    
+                    for (let i = 0; i < characteristics.length; i++) {
+                        const characteristic = characteristics[i];
+                        
+                        // Only capture if it has visible charts
+                        const chartsSection = characteristic.querySelector('[id*="chartsSection"]');
+                        if (!chartsSection || chartsSection.classList.contains('hidden')) {
+                            continue; // Skip if no charts are generated
+                        }
+                        
+                        console.log(`Processing characteristic ${i + 1}...`);
+                        
+                        // Add new page for each characteristic
+                        pdf.addPage();
+                        
+                        // Capture individual characteristic
+                        const charCanvas = await html2canvas(characteristic, {
+                            scale: 1.5,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            height: characteristic.scrollHeight,
+                            width: characteristic.scrollWidth
+                        });
+                        
+                        const charImgData = charCanvas.toDataURL('image/png');
+                        const charImgProps = pdf.getImageProperties(charImgData);
+                        let charImgHeight = (charImgProps.height * imgWidth) / charImgProps.width;
+                        
+                        // Handle tall content by scaling down or splitting
+                        if (charImgHeight > pageHeight) {
+                            charImgHeight = pageHeight;
+                        }
+                        
+                        pdf.addImage(charImgData, 'PNG', 5, 5, imgWidth, charImgHeight);
+                    }
+                    
+                    // Save PDF
+                    const fileName = `SPC_Control_Charts_${new Date().toISOString().split('T')[0]}.pdf`;
+                    pdf.save(fileName);
+                    
+                    showStatusMessage('PDF exported successfully!', 'success');
+                    
+                } catch (pdfError) {
+                    console.error('PDF generation error:', pdfError);
+                    showStatusMessage('PDF export failed. Please try again.', 'error');
+                }
+                
+                // Restore original display states
+                printOnlyElements.forEach(el => el.classList.add('hidden'));
+                noPrintElements.forEach(el => el.style.display = '');
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                showStatusMessage('Export failed. Please try again.', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        // Update print-only elements with current form values
+        function updatePrintElements() {
+            // Update document control values for print
+            const printFields = [
+                { input: 'documentNumber', printElement: document.querySelector('.print-only') },
+                { input: 'revisionNumber', printElement: document.querySelectorAll('.print-only')[1] },
+                { input: 'effectiveDate', printElement: document.querySelectorAll('.print-only')[4] },
+                { input: 'reportStartDate', printElement: document.querySelectorAll('.print-only')[5] },
+                { input: 'reportEndDate', printElement: document.querySelectorAll('.print-only')[6] }
+            ];
+            
+            printFields.forEach(field => {
+                if (field.printElement && document.getElementById(field.input)) {
+                    field.printElement.textContent = document.getElementById(field.input).value || '';
+                }
+            });
+        }
+
+        // Load part configuration
+        function loadPartConfiguration(partKey) {
+            if (!PART_CONFIGS[partKey]) return;
+            
+            // Clear existing characteristics
+            characteristicsContainer.innerHTML = '';
+            characteristicCounter = 0;
+            
+            // Clear data and chart instances
+            Object.keys(characteristicsData).forEach(key => delete characteristicsData[key]);
+            Object.keys(chartInstances).forEach(key => {
+                chartInstances[key].destroy();
+                delete chartInstances[key];
+            });
+            
+            // Hide summary section
+            summarySection.classList.add('hidden');
+            
+            // Load characteristics for the selected part
+            const config = PART_CONFIGS[partKey] || PART_CONFIGS['default'];
+            config.forEach(characteristic => {
+                addNewCharacteristic(characteristic);
+            });
+            
+            showStatusMessage(`Loaded configuration for ${partSelector.options[partSelector.selectedIndex].text}`, 'success');
+        }
+
+        // Function to add a new characteristic
+        function addNewCharacteristic(config = null) {
+            const characteristicId = ++characteristicCounter;
+            const isVariable = config ? config.type === 'variable' : true;
+            
+            const characteristicCard = document.createElement('div');
+            characteristicCard.className = 'bg-white border border-gray-200 rounded-lg p-6 shadow-md';
+            characteristicCard.id = `characteristic-${characteristicId}`;
+            
+            characteristicCard.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">${config ? config.name : `Characteristic ${characteristicId}`}</h3>
+                    <div class="flex gap-2 no-print">
+                        <button onclick="removeCharacteristic(${characteristicId})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Input Section -->
+                    <div class="space-y-4 no-print">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Characteristic Type</label>
+                            <select id="type-${characteristicId}" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" onchange="toggleInputFields(${characteristicId})">
+                                <option value="variable" ${isVariable ? 'selected' : ''}>Variable (X̄ & R Chart)</option>
+                                <option value="attribute" ${!isVariable ? 'selected' : ''}>Attribute (p Chart)</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="subgroupSize-${characteristicId}" class="block text-sm font-medium text-gray-700 mb-1">Subgroup Size (n)</label>
+                            <input type="number" id="subgroupSize-${characteristicId}" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" min="2" max="10" value="${config ? config.initialValues.subgroupSize : '4'}">
+                        </div>
+                        
+                        <div id="variableInputs-${characteristicId}" class="${isVariable ? '' : 'hidden'}">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label for="lsl-${characteristicId}" class="block text-sm font-medium text-gray-700 mb-1">LSL</label>
+                                    <input type="number" id="lsl-${characteristicId}" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" step="any" value="${config && config.initialValues.lsl ? config.initialValues.lsl : ''}">
+                                </div>
+                                <div>
+                                    <label for="nominal-${characteristicId}" class="block text-sm font-medium text-gray-700 mb-1">Nominal</label>
+                                    <input type="number" id="nominal-${characteristicId}" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" step="any" value="${config && config.initialValues.nominalValue ? config.initialValues.nominalValue : ''}">
+                                </div>
+                                <div>
+                                    <label for="usl-${characteristicId}" class="block text-sm font-medium text-gray-700 mb-1">USL</label>
+                                    <input type="number" id="usl-${characteristicId}" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" step="any" value="${config && config.initialValues.usl ? config.initialValues.usl : ''}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="data-${characteristicId}" class="block text-sm font-medium text-gray-700 mb-1">
+                                <span id="dataLabel-${characteristicId}">
+                                    ${isVariable ? 'Data (comma-separated values per subgroup, one subgroup per line)' : 'Data (sample size, defect count per line)'}
+                                </span>
+                            </label>
+                            <textarea id="data-${characteristicId}" rows="6" class="w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm" placeholder="${isVariable ? '1252.98, 1252.88, 1252.78, 1252.97\n1252.6, 1249.19, 1252.77, 1253.19' : '100,5\n100,6\n100,4'}">${config ? config.initialValues.data : ''}</textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Results Section -->
+                    <div class="space-y-4">
+                        <div id="resultsSection-${characteristicId}" class="hidden">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Statistical Results - ${config ? config.name : `Characteristic ${characteristicId}`}</h4>
+                            <div id="variableResults-${characteristicId}" class="grid grid-cols-2 gap-2 text-sm ${isVariable ? '' : 'hidden'}">
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                                    <p class="text-gray-600 text-xs">Process Mean (X̄̄)</p>
+                                    <p id="xDoubleBarResult-${characteristicId}" class="text-xl font-bold text-blue-600"></p>
+                                </div>
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                                    <p class="text-gray-600 text-xs">Average Range (R̄)</p>
+                                    <p id="rBarResult-${characteristicId}" class="text-xl font-bold text-blue-600"></p>
+                                </div>
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                                    <p class="text-gray-600 text-xs">Process Capability (Cpk)</p>
+                                    <p id="cpkResult-${characteristicId}" class="text-xl font-bold text-blue-600"></p>
+                                </div>
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                                    <p class="text-gray-600 text-xs">Sigma Within (σ<sub>within</sub>)</p>
+                                    <p id="sigmaWithinResult-${characteristicId}" class="text-xl font-bold text-blue-600"></p>
+                                </div>
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                                    <p class="text-gray-600 text-xs">PPM Defects</p>
+                                    <p id="ppmResult-${characteristicId}" class="text-xl font-bold text-blue-600"></p>
+                                </div>
+                                <div class="bg-green-50 p-2 rounded border border-green-200">
+                                    <p class="text-gray-600 text-xs">Anderson-Darling P-Value</p>
+                                    <p id="pValueResult-${characteristicId}" class="text-xl font-bold text-green-600"></p>
+                                </div>
+                            </div>
+                            <div id="attributeResults-${characteristicId}" class="grid grid-cols-2 gap-2 text-sm ${isVariable ? 'hidden' : ''}">
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                                    <p class="text-gray-600 text-xs">Average Proportion (p̄)</p>
+                                    <p id="pBarResult-${characteristicId}" class="text-xl font-bold text-blue-600"></p>
+                                </div>
+                                <div class="bg-red-50 p-2 rounded border border-red-200">
+                                    <p class="text-gray-600 text-xs">Out of Control Points</p>
+                                    <p id="outOfControlResult-${characteristicId}" class="text-xl font-bold text-red-600"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="no-print">
+                            <button onclick="generateChart(${characteristicId})" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                                Generate Chart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div id="chartsSection-${characteristicId}" class="mt-8 hidden">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Control Charts</h4>
+                    
+                    <!-- Variable Charts -->
+                    <div id="variableCharts-${characteristicId}" class="${isVariable ? '' : 'hidden'}">
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                            <div class="chart-container">
+                                <canvas id="xBarChart-${characteristicId}" height="280"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="rChart-${characteristicId}" height="280"></canvas>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                            <div class="chart-container">
+                                <canvas id="distributionChart-${characteristicId}" height="280"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="qqPlot-${characteristicId}" height="280"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Attribute Charts -->
+                    <div id="attributeCharts-${characteristicId}" class="${isVariable ? 'hidden' : ''}">
+                        <div class="chart-container">
+                            <canvas id="pChart-${characteristicId}" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            characteristicsContainer.appendChild(characteristicCard);
+            
+            // Store characteristic data
+            characteristicsData[characteristicId] = {
+                name: config ? config.name : `Characteristic ${characteristicId}`,
+                type: isVariable ? 'variable' : 'attribute',
+                data: config ? config.initialValues.data : ''
+            };
+        }
+
+        // Toggle input fields based on characteristic type
+        function toggleInputFields(characteristicId) {
+            const typeSelect = document.getElementById(`type-${characteristicId}`);
+            const variableInputs = document.getElementById(`variableInputs-${characteristicId}`);
+            const dataLabel = document.getElementById(`dataLabel-${characteristicId}`);
+            const dataTextarea = document.getElementById(`data-${characteristicId}`);
+            const variableResults = document.getElementById(`variableResults-${characteristicId}`);
+            const attributeResults = document.getElementById(`attributeResults-${characteristicId}`);
+            const variableCharts = document.getElementById(`variableCharts-${characteristicId}`);
+            const attributeCharts = document.getElementById(`attributeCharts-${characteristicId}`);
+            
+            const isVariable = typeSelect.value === 'variable';
+            
+            if (isVariable) {
+                variableInputs.classList.remove('hidden');
+                variableResults.classList.remove('hidden');
+                attributeResults.classList.add('hidden');
+                variableCharts.classList.remove('hidden');
+                attributeCharts.classList.add('hidden');
+                dataLabel.textContent = 'Data (comma-separated values per subgroup, one subgroup per line)';
+                dataTextarea.placeholder = '1252.98, 1252.88, 1252.78, 1252.97\n1252.6, 1249.19, 1252.77, 1253.19';
+            } else {
+                variableInputs.classList.add('hidden');
+                variableResults.classList.add('hidden');
+                attributeResults.classList.remove('hidden');
+                variableCharts.classList.add('hidden');
+                attributeCharts.classList.remove('hidden');
+                dataLabel.textContent = 'Data (sample size, defect count per line)';
+                dataTextarea.placeholder = '100,5\n100,6\n100,4';
+            }
+        }
+
+        // Remove a characteristic
+        function removeCharacteristic(characteristicId) {
+            const characteristicCard = document.getElementById(`characteristic-${characteristicId}`);
+            if (characteristicCard && confirm('Are you sure you want to remove this characteristic?')) {
+                // Clean up chart instances
+                cleanupChartsForCharacteristic(characteristicId);
+                
+                // Remove from DOM and data store
+                characteristicCard.remove();
+                delete characteristicsData[characteristicId];
+            }
+        }
+
+        // Show status message
+        function showStatusMessage(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `text-center text-sm font-medium rounded-md p-3 mb-8 ${
+                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+            }`;
+            statusMessage.classList.remove('hidden');
+            
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Reset all data and charts
+        function resetAll() {
+            if (confirm('Are you sure you want to reset all characteristics and data? This action cannot be undone.')) {
+                // Clear all characteristics
+                characteristicsContainer.innerHTML = '';
+                characteristicCounter = 0;
+                characteristicsData = {};
+                
+                // Destroy all chart instances
+                Object.keys(chartInstances).forEach(key => {
+                    chartInstances[key].destroy();
+                    delete chartInstances[key];
+                });
+                
+                // Reset form fields
+                document.getElementById('documentNumber').value = '';
+                document.getElementById('revisionNumber').value = '';
+                partSelector.value = 'default';
+                updatePartImage('default');
+                
+                // Hide summary
+                summarySection.classList.add('hidden');
+                
+                showStatusMessage('All data has been reset', 'success');
+            }
+        }
+
+        // Generate all charts
+        function generateAllCharts() {
+            const allCharacteristics = Object.keys(characteristicsData);
+            
+            if (allCharacteristics.length === 0) {
+                showStatusMessage('No characteristics available. Please add at least one characteristic.', 'error');
+                return;
+            }
+            
+            let generatedCount = 0;
+            
+            allCharacteristics.forEach(characteristicId => {
+                try {
+                    generateChart(characteristicId);
+                    generatedCount++;
+                } catch (error) {
+                    console.error(`Error generating chart for characteristic ${characteristicId}:`, error);
+                }
+            });
+            
+            if (generatedCount > 0) {
+                showStatusMessage(`Generated ${generatedCount} chart(s) successfully`, 'success');
+                updateSummary();
+            } else {
+                showStatusMessage('No charts could be generated. Please check your data.', 'error');
+            }
+        }
+
+        // Update summary section
+        function updateSummary() {
+            const summaryCards = [];
+            
+            Object.keys(characteristicsData).forEach(characteristicId => {
+                const char = characteristicsData[characteristicId];
+                const name = char.name || 'Unnamed Characteristic';
+                
+                if (char.type === 'variable') {
+                    const xDoubleBarElement = document.getElementById(`xDoubleBarResult-${characteristicId}`);
+                    const rBarElement = document.getElementById(`rBarResult-${characteristicId}`);
+                    const cpkElement = document.getElementById(`cpkResult-${characteristicId}`);
+                    const sigmaWithinElement = document.getElementById(`sigmaWithinResult-${characteristicId}`);
+                    const ppmElement = document.getElementById(`ppmResult-${characteristicId}`);
+                    const pValueElement = document.getElementById(`pValueResult-${characteristicId}`);
+                    
+                    const xDoubleBar = xDoubleBarElement ? xDoubleBarElement.textContent : 'N/A';
+                    const rBar = rBarElement ? rBarElement.textContent : 'N/A';
+                    const cpk = cpkElement ? cpkElement.textContent : 'N/A';
+                    const sigmaWithin = sigmaWithinElement ? sigmaWithinElement.textContent : 'N/A';
+                    const ppm = ppmElement ? ppmElement.textContent : 'N/A';
+                    const pValue = pValueElement ? pValueElement.textContent : 'N/A';
+                    
+                    summaryCards.push(`
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
+                            <h4 class="font-semibold text-gray-800 mb-2 text-sm">${name}</h4>
+                            <div class="space-y-1 text-xs">
+                                <p>X̄̄: <span class="font-bold">${xDoubleBar}</span></p>
+                                <p>R̄: <span class="font-bold">${rBar}</span></p>
+                                <p>Cpk: <span class="font-bold">${cpk}</span></p>
+                                <p>σ<sub>within</sub>: <span class="font-bold">${sigmaWithin}</span></p>
+                                <p>PPM: <span class="font-bold">${ppm}</span></p>
+                                <p>P-Value: <span class="font-bold ${parseFloat(pValue) >= 0.05 ? 'text-green-600' : 'text-red-600'}">${pValue}</span></p>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    const pBarElement = document.getElementById(`pBarResult-${characteristicId}`);
+                    const outOfControlElement = document.getElementById(`outOfControlResult-${characteristicId}`);
+                    
+                    const pBar = pBarElement ? pBarElement.textContent : 'N/A';
+                    const outOfControl = outOfControlElement ? outOfControlElement.textContent : 'N/A';
+                    
+                    summaryCards.push(`
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
+                            <h4 class="font-semibold text-gray-800 mb-2 text-sm">${name}</h4>
+                            <div class="space-y-1 text-xs">
+                                <p>p̄: <span class="font-bold">${pBar}</span></p>
+                                <p>Out of Control: <span class="font-bold text-red-600">${outOfControl}</span></p>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+            
+            if (summaryCards.length > 0) {
+                summaryContent.innerHTML = summaryCards.join('');
+                summarySection.classList.remove('hidden');
+            }
+        }
+
+        // Function to cleanup existing charts for a characteristic
+        function cleanupChartsForCharacteristic(characteristicId) {
+            const canvasIds = [
+                `xBarChart-${characteristicId}`,
+                `rChart-${characteristicId}`,
+                `distributionChart-${characteristicId}`,
+                `qqPlot-${characteristicId}`,
+                `pChart-${characteristicId}`
+            ];
+            
+            canvasIds.forEach(canvasId => {
+                if (chartInstances[canvasId]) {
+                    chartInstances[canvasId].destroy();
+                    delete chartInstances[canvasId];
+                }
+                
+                // Reset canvas element
+                const canvas = document.getElementById(canvasId);
+                if (canvas) {
+                    const parent = canvas.parentNode;
+                    const newCanvas = document.createElement('canvas');
+                    newCanvas.id = canvasId;
+                    newCanvas.height = 400;
+                    newCanvas.style.maxHeight = '400px';
+                    newCanvas.style.height = '400px';
+                    parent.replaceChild(newCanvas, canvas);
+                }
+            });
+        }
+
+        // Function to generate charts for a specific characteristic
+        function generateChart(characteristicId) {
+            const typeSelect = document.getElementById(`type-${characteristicId}`);
+            const subgroupSizeInput = document.getElementById(`subgroupSize-${characteristicId}`);
+            const dataTextarea = document.getElementById(`data-${characteristicId}`);
+            
+            if (!typeSelect || !subgroupSizeInput || !dataTextarea) {
+                throw new Error('Required elements not found');
+            }
+            
+            const type = typeSelect.value;
+            const subgroupSize = parseInt(subgroupSizeInput.value);
+            const dataText = dataTextarea.value.trim();
+            
+            if (!dataText) {
+                throw new Error('No data provided');
+            }
+            
+            // Clean up existing charts first
+            cleanupChartsForCharacteristic(characteristicId);
+            
+            const resultsSection = document.getElementById(`resultsSection-${characteristicId}`);
+            const chartsSection = document.getElementById(`chartsSection-${characteristicId}`);
+            
+            resultsSection.classList.remove('hidden');
+            chartsSection.classList.remove('hidden');
+            
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                if (type === 'variable') {
+                    generateVariableCharts(characteristicId, subgroupSize, dataText);
+                } else {
+                    generateAttributeCharts(characteristicId, subgroupSize, dataText);
+                }
+            }, 100);
+            
+            const char = characteristicsData[characteristicId];
+            if (char) {
+                char.type = type;
+                char.data = dataText;
+            }
+        }
+
+        // Function to generate variable (X-bar & R) charts
+        function generateVariableCharts(characteristicId, subgroupSize, dataText) {
+            // Parse data
+            const subgroups = parseVariableData(dataText);
+            
+            if (subgroups.length === 0) {
+                throw new Error('Invalid data format');
+            }
+            
+            // Calculate SPC statistics
+            const stats = calculateSPCStats(subgroups, subgroupSize);
+            
+            // Get specification limits
+            const lslInput = document.getElementById(`lsl-${characteristicId}`);
+            const uslInput = document.getElementById(`usl-${characteristicId}`);
+            const nominalInput = document.getElementById(`nominal-${characteristicId}`);
+            
+            const lsl = lslInput && lslInput.value ? parseFloat(lslInput.value) : null;
+            const usl = uslInput && uslInput.value ? parseFloat(uslInput.value) : null;
+            const nominalValue = nominalInput && nominalInput.value ? parseFloat(nominalInput.value) : null;
+            
+            // Calculate within-subgroup standard deviation
+            const sigmaWithin = calculateSigmaWithin(subgroups);
+            const capability = calculateCapability(stats, usl, lsl, sigmaWithin);
+            const allDataPoints = subgroups.flat();
+            const ppm = calculatePPM(allDataPoints, usl, lsl);
+            const andersonDarling = andersonDarlingTest(allDataPoints);
+            
+            // Update results display
+            document.getElementById(`xDoubleBarResult-${characteristicId}`).textContent = stats.xDoubleBar.toFixed(3);
+            document.getElementById(`rBarResult-${characteristicId}`).textContent = stats.rBar.toFixed(3);
+            document.getElementById(`cpkResult-${characteristicId}`).textContent = capability.cpk;
+            document.getElementById(`sigmaWithinResult-${characteristicId}`).textContent = sigmaWithin.toFixed(4);
+            document.getElementById(`ppmResult-${characteristicId}`).textContent = ppm.toFixed(0);
+            document.getElementById(`pValueResult-${characteristicId}`).textContent = andersonDarling.pValue.toFixed(4);
+            
+            // Generate charts
+            const subgroupLabels = subgroups.map((_, index) => (index + 1).toString());
+            
+            // X-bar chart
+            renderXBarChart(`xBarChart-${characteristicId}`, 'X̄ Chart', subgroupLabels, stats.xBars, stats.xDoubleBar, stats.xBarUCL, stats.xBarLCL, stats.outOfControlX, usl, lsl, nominalValue);
+            
+            // R chart
+            renderChart(`rChart-${characteristicId}`, 'R Chart', subgroupLabels, stats.ranges, stats.rBar, stats.rUCL, stats.rLCL, stats.outOfControlR);
+            
+            // Distribution chart
+            renderDistributionChart(`distributionChart-${characteristicId}`, allDataPoints, stats.xDoubleBar, sigmaWithin, usl, lsl, nominalValue, characteristicId);
+            
+            // Q-Q plot
+            renderQQPlot(`qqPlot-${characteristicId}`, allDataPoints, characteristicId);
+        }
+
+        // Function to generate attribute (p) charts
+        function generateAttributeCharts(characteristicId, subgroupSize, dataText) {
+            // Parse attribute data
+            const attributeData = parseAttributeData(dataText);
+            
+            if (attributeData.length === 0) {
+                throw new Error('Invalid attribute data format');
+            }
+            
+            // Calculate p-chart statistics
+            const stats = calculatePChartStats(attributeData);
+            
+            // Update results display
+            document.getElementById(`pBarResult-${characteristicId}`).textContent = stats.pBar.toFixed(4);
+            document.getElementById(`outOfControlResult-${characteristicId}`).textContent = stats.outOfControl.length;
+            
+            // Generate p-chart
+            const subgroupLabels = attributeData.map((_, index) => (index + 1).toString());
+            renderPChart(`pChart-${characteristicId}`, 'p Chart', subgroupLabels, stats.proportions, stats.pBar, stats.ucl, stats.lcl, stats.outOfControl, characteristicId);
+        }
+
+        // Parse variable data from text input
+        function parseVariableData(dataText) {
+            const lines = dataText.split('\n').filter(line => line.trim());
+            const subgroups = [];
+            
+            lines.forEach(line => {
+                const values = line.split(',').map(val => {
+                    const num = parseFloat(val.trim());
+                    return isNaN(num) ? null : num;
+                }).filter(val => val !== null);
+                
+                if (values.length > 0) {
+                    subgroups.push(values);
+                }
+            });
+            
+            return subgroups;
+        }
+
+        // Parse attribute data from text input
+        function parseAttributeData(dataText) {
+            const lines = dataText.split('\n').filter(line => line.trim());
+            const attributeData = [];
+            
+            lines.forEach(line => {
+                const parts = line.split(',').map(val => val.trim());
+                if (parts.length >= 2) {
+                    const sampleSize = parseInt(parts[0]);
+                    const defectCount = parseInt(parts[1]);
+                    
+                    if (!isNaN(sampleSize) && !isNaN(defectCount) && sampleSize > 0) {
+                        attributeData.push({ sampleSize, defectCount });
+                    }
+                }
+            });
+            
+            return attributeData;
+        }
+
+        // Calculate SPC statistics
+        function calculateSPCStats(subgroups, subgroupSize) {
+            // Calculate subgroup means and ranges
+            const xBars = subgroups.map(subgroup => 
+                subgroup.reduce((sum, val) => sum + val, 0) / subgroup.length
+            );
+            
+            const ranges = subgroups.map(subgroup => {
+                const min = Math.min(...subgroup);
+                const max = Math.max(...subgroup);
+                return max - min;
+            });
+            
+            // Calculate overall mean (X double bar) and average range (R bar)
+            const xDoubleBar = xBars.reduce((sum, val) => sum + val, 0) / xBars.length;
+            const rBar = ranges.reduce((sum, val) => sum + val, 0) / ranges.length;
+            
+            // Control chart constants
+            const n = Math.min(Math.max(subgroupSize, 2), 10);
+            const A2 = CONSTANTS[n].A2;
+            const D3 = CONSTANTS[n].D3;
+            const D4 = CONSTANTS[n].D4;
+            const d2 = CONSTANTS[n].d2;
+            
+            // Calculate control limits
+            const xBarUCL = xDoubleBar + A2 * rBar;
+            const xBarLCL = xDoubleBar - A2 * rBar;
+            const rUCL = D4 * rBar;
+            const rLCL = D3 * rBar;
+            
+            // Detect out-of-control points
+            const outOfControlX = [];
+            const outOfControlR = [];
+            
+            xBars.forEach((xBar, index) => {
+                if (xBar > xBarUCL || xBar < xBarLCL) {
+                    outOfControlX.push(index);
+                }
+            });
+            
+            ranges.forEach((range, index) => {
+                if (range > rUCL || range < rLCL) {
+                    outOfControlR.push(index);
+                }
+            });
+            
+            return {
+                xBars,
+                ranges,
+                xDoubleBar,
+                rBar,
+                xBarUCL,
+                xBarLCL,
+                rUCL,
+                rLCL,
+                outOfControlX,
+                outOfControlR,
+                A2,
+                d2
+            };
+        }
+
+        // Calculate within-subgroup standard deviation
+        function calculateSigmaWithin(subgroups) {
+            let totalSumSquares = 0;
+            let totalCount = 0;
+
+            subgroups.forEach(subgroup => {
+                if (subgroup.length > 1) {
+                    const mean = subgroup.reduce((sum, val) => sum + val, 0) / subgroup.length;
+                    const sumSquares = subgroup.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0);
+                    totalSumSquares += sumSquares;
+                    totalCount += subgroup.length;
+                }
+            });
+
+            if (totalCount <= subgroups.length) return null;
+
+            return Math.sqrt(totalSumSquares / (totalCount - subgroups.length));
+        }
+
+        // Calculate p-chart statistics
+        function calculatePChartStats(attributeData) {
+            const subgroupSizes = attributeData.map(d => d.sampleSize);
+            const nonConformingCounts = attributeData.map(d => d.defectCount);
+            const proportions = attributeData.map(d => d.defectCount / d.sampleSize);
+            
+            // Calculate p-bar (overall proportion)
+            const totalDefects = nonConformingCounts.reduce((sum, val) => sum + val, 0);
+            const totalSample = subgroupSizes.reduce((sum, val) => sum + val, 0);
+            const pBar = totalDefects / totalSample;
+            
+            // Calculate dynamic control limits for each subgroup
+            const ucl = subgroupSizes.map(n => {
+                const limit = pBar + 3 * Math.sqrt((pBar * (1 - pBar)) / n);
+                return Math.min(limit, 1); // Cap at 1
+            });
+            
+            const lcl = subgroupSizes.map(n => {
+                const limit = pBar - 3 * Math.sqrt((pBar * (1 - pBar)) / n);
+                return Math.max(limit, 0); // Floor at 0
+            });
+            
+            // Detect out-of-control points
+            const outOfControl = [];
+            proportions.forEach((p, index) => {
+                if (p > ucl[index] || p < lcl[index]) {
+                    outOfControl.push(index);
+                }
+            });
+            
+            return { proportions, pBar, ucl, lcl, outOfControl };
+        }
+
+        // Calculate process capability (Cp and Cpk)
+        function calculateCapability(stats, usl, lsl, sigmaWithin) {
+            const processSigma = stats.rBar / stats.d2;
+            let cp = (usl - lsl) / (6 * processSigma);
+            
+            // Cpk is calculated using the within-subgroup standard deviation
+            let cpk = Math.min((usl - stats.xDoubleBar) / (3 * sigmaWithin), (stats.xDoubleBar - lsl) / (3 * sigmaWithin));
+            
+            // Format to 2 decimal places and handle infinity
+            cp = isFinite(cp) ? cp.toFixed(2) : 'N/A';
+            cpk = isFinite(cpk) ? cpk.toFixed(2) : 'N/A';
+
+            return { cp, cpk, sigmaWithin };
+        }
+
+        // Calculate estimated PPM (Parts Per Million) defects
+        function calculatePPM(data, usl, lsl) {
+            if (!usl && !lsl) return 0;
+            
+            let defects = 0;
+            data.forEach(value => {
+                if ((usl && value > usl) || (lsl && value < lsl)) {
+                    defects++;
+                }
+            });
+            
+            return (defects / data.length) * 1000000;
+        }
+
+        // Anderson-Darling normality test
+        function andersonDarlingTest(data) {
+            const n = data.length;
+            const sortedData = [...data].sort((a, b) => a - b);
+            
+            // Calculate sample mean and standard deviation
+            const mean = sortedData.reduce((sum, val) => sum + val, 0) / n;
+            const variance = sortedData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
+            const stdDev = Math.sqrt(variance);
+            
+            // Standardize data (Z-scores)
+            const zScores = sortedData.map(val => (val - mean) / stdDev);
+            
+            // Calculate Anderson-Darling statistic
+            let sum = 0;
+            for (let i = 0; i < n; i++) {
+                const phi = normalCDF(zScores[i]);
+                if (phi > 0 && phi < 1) {
+                    sum += (2 * i + 1) * (Math.log(phi) + Math.log(1 - normalCDF(zScores[n - 1 - i])));
+                }
+            }
+            
+            const a2 = -n - (1 / n) * sum;
+            const adjustedA2 = a2 * (1 + 0.75 / n + 2.25 / (n * n));
+            
+            return { a2: adjustedA2, pValue: 0.5 }; // Simplified p-value
+        }
+
+        // Normal cumulative distribution function approximation
+        function normalCDF(x) {
+            // Abramowitz and Stegun approximation
+            const t = 1.0 / (1.0 + 0.2316419 * Math.abs(x));
+            const d = 0.3989423 * Math.exp(-x * x / 2);
+            const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+            return x > 0 ? 1 - prob : prob;
+        }
+
+        // Normal quantile function (inverse of normal CDF)
+        function normalQuantile(p) {
+            // Beasley-Springer-Moro algorithm
+            if (p <= 0 || p >= 1) {
+                throw new Error('Input must be between 0 and 1');
+            }
+            
+            const a = [0, -3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+            const b = [0, -5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01];
+            const c = [0, -7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+            const d = [0, 7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
+            
+            const pLow = 0.02425;
+            const pHigh = 1 - pLow;
+            let q, r;
+            
+            if (p < pLow) {
+                q = Math.sqrt(-2 * Math.log(p));
+                return (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) / ((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1);
+            } else if (p <= pHigh) {
+                q = p - 0.5;
+                r = q * q;
+                return (((((a[1] * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * r + a[6]) * q / (((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1);
+            } else {
+                q = Math.sqrt(-2 * Math.log(1 - p));
+                return -(((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) / ((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1);
+            }
+        }
+
+        // Render X-bar control charts with SCV labels for outliers
+        function renderXBarChart(canvasId, title, labels, data, centerLine, ucl, lcl, outOfControlPoints = [], usl = null, lsl = null, nominalValue = null) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+            }
+
+            // Determine point colors: Red for spec limit violations, Orange for control limit violations
+            const pointColors = data.map((value, index) => {
+                if (outOfControlPoints.includes(index)) {
+                    // Check if it's outside spec limits (USL/LSL) - RED
+                    if ((usl !== null && value > usl) || (lsl !== null && value < lsl)) {
+                        return 'rgb(239, 68, 68)'; // Red for spec violations
+                    }
+                    // Otherwise it's outside control limits (UCL/LCL) - ORANGE
+                    return 'rgb(255, 165, 0)'; // Orange for control limit violations
+                }
+                return 'rgb(59, 130, 246)'; // Blue for normal points
+            });
+
+            const pointBorderColors = data.map((value, index) => {
+                if (outOfControlPoints.includes(index)) {
+                    if ((usl !== null && value > usl) || (lsl !== null && value < lsl)) {
+                        return 'rgb(220, 38, 38)'; // Darker red border
+                    }
+                    return 'rgb(255, 140, 0)'; // Darker orange border
+                }
+                return 'rgb(59, 130, 246)';
+            });
+
+            const datasets = [{
+                label: 'Data',
+                data: data,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgb(59, 130, 246)',
+                pointBackgroundColor: pointColors,
+                pointBorderColor: pointBorderColors,
+                tension: 0.2,
+                pointRadius: 4,
+                pointStyle: 'circle',
+                fill: false
+            }, {
+                label: `CL (${centerLine.toFixed(3)})`,
+                data: Array(data.length).fill(centerLine),
+                borderColor: 'rgb(34, 197, 94)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            }, {
+                label: `UCL (${ucl.toFixed(3)})`,
+                data: Array(data.length).fill(ucl),
+                borderColor: 'rgb(239, 68, 68)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            }, {
+                label: `LCL (${lcl.toFixed(3)})`,
+                data: Array(data.length).fill(lcl),
+                borderColor: 'rgb(239, 68, 68)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            }];
+
+            // Add specification limits if available
+            if (usl !== null) {
+                const uslDataset = {
+                    label: `USL (${usl.toFixed(3)})`,
+                    data: Array(data.length).fill(usl),
+                    borderColor: 'rgb(124, 58, 237)',
+                    borderDash: [],
+                    pointRadius: 0,
+                    tension: 0,
+                    fill: false
+                };
+                datasets.push(uslDataset);
+            }
+
+            if (lsl !== null) {
+                const lslDataset = {
+                    label: `LSL (${lsl.toFixed(3)})`,
+                    data: Array(data.length).fill(lsl),
+                    borderColor: 'rgb(20, 184, 166)',
+                    borderDash: [],
+                    pointRadius: 0,
+                    tension: 0,
+                    fill: false
+                };
+                datasets.push(lslDataset);
+            }
+
+            if (nominalValue !== null) {
+                const nominalDataset = {
+                    label: `Nominal (${nominalValue.toFixed(3)})`,
+                    data: Array(data.length).fill(nominalValue),
+                    borderColor: 'rgb(0, 0, 0)',
+                    borderDash: [3, 2],
+                    pointRadius: 0,
+                    tension: 0,
+                    fill: false
+                };
+                datasets.push(nominalDataset);
+            }
+
+            const newChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Value',
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Subgroup Number',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: title,
+                        },
+                    },
+                },
+            });
+            chartInstances[canvasId] = newChart;
+        }
+
+        // Render distribution chart
+        function renderDistributionChart(canvasId, allDataPoints, processMean, processSigma, usl, lsl, nominalValue, chartInstanceKey) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+                delete chartInstances[canvasId];
+            }
+
+            // Normal PDF function
+            function normalPDF(x, mean, stdDev) {
+                const variance = stdDev * stdDev;
+                const denominator = Math.sqrt(2 * Math.PI * variance);
+                const exponent = -((x - mean) * (x - mean)) / (2 * variance);
+                return Math.exp(exponent) / denominator;
+            }
+            
+            // Generate theoretical normal curve
+            const minData = Math.min(...allDataPoints);
+            const maxData = Math.max(...allDataPoints);
+            const range = maxData - minData;
+            const step = range / 100;
+            const curveData = [];
+            const curveLabels = [];
+            
+            for (let x = minData - range * 0.1; x <= maxData + range * 0.1; x += step) {
+                curveLabels.push(x.toFixed(2));
+                curveData.push(normalPDF(x, processMean, processSigma));
+            }
+
+            // Create histogram of actual data
+            const binSize = (maxData - minData) / 10;
+            const histogramData = [];
+            const histogramLabels = [];
+            const bins = {};
+            
+            for (let i = minData; i <= maxData + binSize; i += binSize) {
+                const binLabel = `${i.toFixed(2)}`;
+                histogramLabels.push(binLabel);
+                bins[binLabel] = 0;
+            }
+            
+            allDataPoints.forEach(val => {
+                const binIndex = Math.floor((val - minData) / binSize);
+                const binLabel = histogramLabels[binIndex];
+                if (binLabel) {
+                    bins[binLabel]++;
+                }
+            });
+            
+            for (const key in bins) {
+                const binCenter = parseFloat(key);
+                const count = bins[key];
+                const density = count / (allDataPoints.length * binSize);
+                histogramData.push({ x: binCenter, y: density });
+            }
+
+            const datasets = [{
+                label: 'Actual Data (Histogram)',
+                data: histogramData,
+                type: 'bar',
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 1,
+                barPercentage: 0.9,
+                categoryPercentage: 0.9,
+            }, {
+                label: 'Normal Distribution Fit',
+                data: curveLabels.map((x, i) => ({ x: parseFloat(x), y: curveData[i] })),
+                type: 'line',
+                borderColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                fill: false,
+                pointRadius: 0,
+                tension: 0.4,
+            }];
+
+            const newChart = new Chart(ctx, {
+                data: {
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Value',
+                            },
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Density',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribution Plot',
+                        },
+                    },
+                },
+            });
+            chartInstances[canvasId] = newChart;
+        }
+
+        // Render Q-Q plot
+        function renderQQPlot(canvasId, allDataPoints, chartInstanceKey) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+                delete chartInstances[canvasId];
+            }
+
+            const n = allDataPoints.length;
+            const sortedData = [...allDataPoints].sort((a, b) => a - b);
+
+            // Generate theoretical quantiles
+            const qqData = [];
+            for (let i = 0; i < n; i++) {
+                const p = (i + 1 - 0.5) / n; // Probability
+                const theoreticalQuantile = normalQuantile(p);
+                qqData.push({ x: theoreticalQuantile, y: sortedData[i] });
+            }
+
+            // Calculate correlation coefficient for R²
+            const meanTheorical = qqData.reduce((sum, p) => sum + p.x, 0) / n;
+            const meanSample = qqData.reduce((sum, p) => sum + p.y, 0) / n;
+            
+            let numerator = 0;
+            let sumTheoreticalSq = 0;
+            let sumSampleSq = 0;
+            
+            qqData.forEach(p => {
+                const diffTheorical = p.x - meanTheorical;
+                const diffSample = p.y - meanSample;
+                numerator += diffTheorical * diffSample;
+                sumTheoreticalSq += diffTheorical * diffTheorical;
+                sumSampleSq += diffSample * diffSample;
+            });
+            
+            const r = numerator / Math.sqrt(sumTheoreticalSq * sumSampleSq);
+            const rSquared = r * r;
+
+            // R-squared value now displayed directly in chart subtitle
+
+            // Calculate Q-Q line
+            const q1Index = Math.floor(n * 0.25);
+            const q3Index = Math.floor(n * 0.75);
+            const q1_data = sortedData[q1Index];
+            const q3_data = sortedData[q3Index];
+            const q1_theoretical = normalQuantile((q1Index + 1 - 0.5) / n);
+            const q3_theoretical = normalQuantile((q3Index + 1 - 0.5) / n);
+
+            const slope = (q3_data - q1_data) / (q3_theoretical - q1_theoretical);
+            const intercept = q1_data - slope * q1_theoretical;
+
+            const minX = Math.min(...qqData.map(p => p.x));
+            const maxX = Math.max(...qqData.map(p => p.x));
+            
+            const qqLineData = [
+                { x: minX, y: intercept + slope * minX },
+                { x: maxX, y: intercept + slope * maxX }
+            ];
+            
+            const datasets = [{
+                label: 'Data Quantiles',
+                data: qqData,
+                backgroundColor: 'rgb(59, 130, 246)',
+                borderColor: 'rgb(59, 130, 246)',
+                pointRadius: 5,
+                type: 'scatter',
+            }, {
+                label: 'Q-Q Line',
+                data: qqLineData,
+                borderColor: 'rgb(239, 68, 68)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                type: 'line',
+                fill: false,
+            }];
+
+            const newChart = new Chart(ctx, {
+                data: {
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: {
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Theoretical Quantiles',
+                            },
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Sample Quantiles',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Normal Q-Q Plot',
+                        },
+                        subtitle: {
+                            display: true,
+                            text: `Coefficient of Determination (R²): ${rSquared.toFixed(4)}`,
+                            color: '#4B5563',
+                            font: {
+                                size: 14,
+                                weight: 'normal'
+                            },
+                            padding: {
+                                top: 5,
+                                bottom: 0
+                            }
+                        },
+                    },
+                },
+            });
+            chartInstances[canvasId] = newChart;
+        }
+
+        // Render P-chart for attribute data
+        function renderPChart(canvasId, title, labels, proportions, pBar, ucl, lcl, outOfControlPoints, chartInstanceKey) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
+
+            const dataDataset = {
+                label: 'Proportion of Non-Conforming (p)',
+                data: proportions,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgb(59, 130, 246)',
+                tension: 0.2,
+                pointStyle: 'circle',
+                pointRadius: 5,
+                pointBackgroundColor: proportions.map((_, index) => 
+                    outOfControlPoints.includes(index) ? 'red' : 'rgb(59, 130, 246)'
+                ),
+                pointBorderColor: proportions.map((_, index) => 
+                    outOfControlPoints.includes(index) ? 'red' : 'rgb(59, 130, 246)'
+                ),
+                fill: false,
+            };
+
+            const clDataset = {
+                label: `CL (${pBar.toFixed(3)})`,
+                data: Array(proportions.length).fill(pBar),
+                borderColor: 'rgb(34, 197, 94)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            };
+
+            const uclDataset = {
+                label: 'UCL',
+                data: ucl,
+                borderColor: 'rgb(239, 68, 68)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            };
+            
+            const lclDataset = {
+                label: 'LCL',
+                data: lcl,
+                borderColor: 'rgb(239, 68, 68)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            };
+
+            const newChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [dataDataset, clDataset, uclDataset, lclDataset],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Proportion',
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Subgroup Number',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: title,
+                        },
+                    },
+                },
+            });
+            chartInstances[canvasId] = newChart;
+        }
+
+        // Generic chart rendering function
+        function renderChart(canvasId, title, labels, data, centerLine, ucl, lcl, outOfControlPoints = []) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+            }
+
+            const datasets = [{
+                label: 'Data',
+                data: data,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgb(59, 130, 246)',
+                tension: 0.2,
+                pointRadius: 4,
+                pointStyle: 'circle',
+                pointBackgroundColor: data.map((_, index) => 
+                    outOfControlPoints.includes(index) ? 'red' : 'rgb(59, 130, 246)'
+                ),
+                pointBorderColor: data.map((_, index) => 
+                    outOfControlPoints.includes(index) ? 'red' : 'rgb(59, 130, 246)'
+                ),
+                fill: false
+            }, {
+                label: `CL (${centerLine.toFixed(3)})`,
+                data: Array(data.length).fill(centerLine),
+                borderColor: 'rgb(34, 197, 94)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            }, {
+                label: `UCL (${ucl.toFixed(3)})`,
+                data: Array(data.length).fill(ucl),
+                borderColor: 'rgb(239, 68, 68)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            }, {
+                label: `LCL (${lcl.toFixed(3)})`,
+                data: Array(data.length).fill(lcl),
+                borderColor: 'rgb(239, 68, 68)',
+                borderDash: [5, 5],
+                pointRadius: 0,
+                tension: 0,
+                fill: false
+            }];
+
+            const newChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Value',
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Subgroup Number',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: title,
+                        },
+                    },
+                },
+            });
+            chartInstances[canvasId] = newChart;
+        }
+
+        // Initialize the application
+        initializeDates();
+        updatePartImage('default');
+        addNewCharacteristic(); // Add initial characteristic
+    </script>
+</body>
+</html>
