@@ -228,7 +228,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   pageContainer.style.position = 'absolute';
   pageContainer.style.top = '-9999px';
   pageContainer.style.background = 'white';
-  pageContainer.style.padding = '20px';
+  pageContainer.style.padding = '10px';
 
   // Clone the characteristic content
   const clonedCharacteristic = characteristicElement.cloneNode(true) as HTMLElement;
@@ -264,7 +264,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   const chartContainers = clonedCharacteristic.querySelectorAll('.chart-container');
   chartContainers.forEach(container => {
     (container as HTMLElement).style.height = '250px';
-    (container as HTMLElement).style.marginBottom = '20px';
+    (container as HTMLElement).style.marginBottom = '10px';
   });
 
   // Adjust text sizes for better PDF rendering
@@ -273,7 +273,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   const textElements = clonedCharacteristic.querySelectorAll('h3, .text-lg');
   textElements.forEach(el => {
     (el as HTMLElement).style.fontSize = '16px';
-    (el as HTMLElement).style.marginBottom = '15px';
+    (el as HTMLElement).style.marginBottom = '8px';
   });
 
   // Adjust grid layouts for single page
