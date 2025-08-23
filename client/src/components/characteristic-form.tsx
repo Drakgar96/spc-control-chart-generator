@@ -26,7 +26,7 @@ interface CharacteristicFormProps {
 export default function CharacteristicForm({ characteristic, onUpdate, onDelete }: CharacteristicFormProps) {
   const [name, setName] = useState(characteristic.name);
   const [type, setType] = useState<'variable' | 'attribute'>(characteristic.type);
-  const [subgroupSize, setSubgroupSize] = useState(characteristic.subgroupSize.toString());
+  const [subgroupSize, setSubgroupSize] = useState(characteristic.subgroupSize?.toString() || '4');
   const [nominal, setNominal] = useState(characteristic.nominal?.toString() || '');
   const [upperTol, setUpperTol] = useState(characteristic.upperTol?.toString() || '');
   const [lowerTol, setLowerTol] = useState(characteristic.lowerTol?.toString() || '');
@@ -38,7 +38,7 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
       if (type === 'variable') {
         // Parse variable data as subgroups
         const subgroups = parseVariableData(dataInput);
-        
+
         if (subgroups.length === 0) {
           alert('Please enter valid variable data in subgroups (one subgroup per line, comma-separated)');
           return;
@@ -48,21 +48,21 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
         const upperTolValue = upperTol ? parseFloat(upperTol) : null;
         const lowerTolValue = lowerTol ? parseFloat(lowerTol) : null;
         const subgroupSizeValue = parseInt(subgroupSize);
-        
+
         // Calculate SPC statistics
         const spcStats = calculateSPCStats(subgroups, subgroupSizeValue);
         const allDataPoints = subgroups.flat();
         const sigmaWithin = calculateSigmaWithin(subgroups);
-        
+
         spcStats.allDataPoints = allDataPoints;
         spcStats.sigmaWithin = sigmaWithin;
-        
+
         // Calculate basic statistics on all data points
         let stats = null;
         if (nominalValue && upperTolValue !== null && lowerTolValue !== null) {
           stats = calculateStatistics(allDataPoints, nominalValue, upperTolValue, lowerTolValue, sigmaWithin);
         }
-        
+
         const updatedCharacteristic: Characteristic = {
           ...characteristic,
           name,
@@ -78,22 +78,22 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
           stats,
           spcStats
         };
-        
+
         onUpdate(updatedCharacteristic);
       } else {
         // Parse attribute data
         const attributeData = parseAttributeData(dataInput);
-        
+
         if (attributeData.length === 0) {
           alert('Please enter valid attribute data (sample size, defect count per line)');
           return;
         }
-        
+
         const subgroupSizeValue = parseInt(subgroupSize);
-        
+
         // Calculate P-chart statistics
         const pChartStats = calculatePChartStats(attributeData);
-        
+
         const updatedCharacteristic: Characteristic = {
           ...characteristic,
           name,
@@ -109,7 +109,7 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
           stats: null,
           pChartStats
         };
-        
+
         onUpdate(updatedCharacteristic);
       }
     } catch (error) {
@@ -123,27 +123,27 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
       const upperTolValue = upperTol ? parseFloat(upperTol) : 1;
       const lowerTolValue = lowerTol ? parseFloat(lowerTol) : -1;
       const subgroupSizeValue = parseInt(subgroupSize) || 4;
-      
+
       const sampleData = generateSampleData(nominalValue, upperTolValue, lowerTolValue, 5 * subgroupSizeValue);
-      
+
       // Format as subgroups
       const subgroupData = [];
       for (let i = 0; i < sampleData.length; i += subgroupSizeValue) {
         const subgroup = sampleData.slice(i, i + subgroupSizeValue);
         subgroupData.push(subgroup.join(', '));
       }
-      
+
       setDataInput(subgroupData.join('\n'));
     } else {
       // Generate sample attribute data
       const sampleSize = parseInt(subgroupSize) || 100;
       const sampleData = [];
-      
+
       for (let i = 0; i < 10; i++) {
         const defects = Math.floor(Math.random() * 8); // Random defects 0-7
         sampleData.push(`${sampleSize},${defects}`);
       }
-      
+
       setDataInput(sampleData.join('\n'));
     }
   };
@@ -288,7 +288,7 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
               Generate Sample Data
             </Button>
           </div>
-          
+
           {/* Data Format Help */}
           <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
             <strong>Data Format Help:</strong>
