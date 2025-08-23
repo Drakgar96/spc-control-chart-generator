@@ -22,11 +22,8 @@ export default function SummarySection({ characteristics }: SummarySectionProps)
 
   // Calculate overall statistics
   const totalSamples = validCharacteristics.reduce((sum, char) => sum + char.data.length, 0);
-  const avgCp = validCharacteristics.reduce((sum, char) => sum + char.stats!.Cp, 0) / validCharacteristics.length;
-  const avgCpk = validCharacteristics.reduce((sum, char) => sum + char.stats!.Cpk, 0) / validCharacteristics.length;
   const totalOutOfSpec = validCharacteristics.reduce((sum, char) => sum + char.stats!.outOfSpecCount, 0);
   const overallObservedPPM = (totalOutOfSpec / totalSamples) * 1000000;
-  const overallEstimatedPPM = validCharacteristics.reduce((sum, char) => sum + char.stats!.estimatedPPM, 0) / validCharacteristics.length;
   
   // Count characteristics passing normality test (p > 0.05)
   const normalCharacteristics = validCharacteristics.filter(char => 
@@ -48,7 +45,7 @@ export default function SummarySection({ characteristics }: SummarySectionProps)
     <div className="mb-12 bg-blue-50 p-6 rounded-lg border border-blue-200">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Analysis Summary</h2>
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <h4 className="font-semibold text-gray-800 mb-3">Overall Process Summary</h4>
             <div className="space-y-2 text-sm">
@@ -64,32 +61,8 @@ export default function SummarySection({ characteristics }: SummarySectionProps)
                 <span className="text-gray-600">Out of Spec Parts:</span>
                 <span className="font-medium" data-testid="text-out-of-spec">{totalOutOfSpec}</span>
               </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="font-semibold text-gray-800 mb-3">Process Capability</h4>
-            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Average Cp:</span>
-                <span className={`font-medium ${getCapabilityColor(avgCp)}`} data-testid="text-avg-cp">
-                  {avgCp.toFixed(3)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Average Cpk:</span>
-                <span className={`font-medium ${getCapabilityColor(avgCpk)}`} data-testid="text-avg-cpk">
-                  {avgCpk.toFixed(3)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Estimate PPM:</span>
-                <span className="font-medium text-blue-600" data-testid="text-overall-estimate-ppm">
-                  {overallEstimatedPPM.toFixed(0)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Observed PPM:</span>
+                <span className="text-gray-600">Overall Observed PPM:</span>
                 <span className="font-medium text-blue-600" data-testid="text-overall-observed-ppm">
                   {overallObservedPPM.toFixed(0)}
                 </span>
