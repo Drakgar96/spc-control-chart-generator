@@ -16,11 +16,11 @@ export async function exportToPdf(): Promise<void> {
   }
 
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pdf = new jsPDF('p', 'mm', 'letter');
   
-  // Define A4 dimensions in mm (minus margins)
-  const pageWidth = 190; // 210mm - 20mm margins
-  const pageHeight = 270; // 297mm - 27mm margins
+  // Define Letter dimensions in mm (minus margins)
+  const pageWidth = 196; // 216mm - 20mm margins
+  const pageHeight = 259; // 279mm - 20mm margins
   
   try {
     // Hide no-print elements
