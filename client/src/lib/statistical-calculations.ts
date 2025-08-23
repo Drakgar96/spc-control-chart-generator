@@ -275,7 +275,7 @@ export function calculatePChartStats(attributeData: { sampleSize: number; defect
   return { proportions, pBar, ucl, lcl, outOfControl };
 }
 
-export function calculateStatistics(data: number[], nominal: number, upperTol: number, lowerTol: number): StatisticalResults {
+export function calculateStatistics(data: number[], nominal: number, upperTol: number, lowerTol: number, sigmaWithin?: number | null): StatisticalResults {
   if (!data || data.length === 0) {
     throw new Error('No data provided for statistical calculation');
   }
@@ -290,8 +290,12 @@ export function calculateStatistics(data: number[], nominal: number, upperTol: n
   const tolerance = USL - LSL;
   
   // Process capability indices
-  const Cp = tolerance / (6 * stdDev);
-  const Cpk = Math.min((USL - mean) / (3 * stdDev), (mean - LSL) / (3 * stdDev));
+  // Cp and Cpk use sigma within (short-term capability) when available
+  const sigmaForCp = sigmaWithin || stdDev;
+  const Cp = tolerance / (6 * sigmaForCp);
+  const Cpk = Math.min((USL - mean) / (3 * sigmaForCp), (mean - LSL) / (3 * sigmaForCp));
+  
+  // Pp and Ppk use overall sigma (long-term capability)
   const Pp = tolerance / (6 * stdDev);
   const Ppk = Math.min((USL - mean) / (3 * stdDev), (mean - LSL) / (3 * stdDev));
   

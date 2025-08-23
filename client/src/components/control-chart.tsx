@@ -552,7 +552,7 @@ export default function ControlChart({ characteristic }: ControlChartProps) {
           
           {/* Statistical Summary for Variable */}
           {characteristic.stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
               <div className="bg-gray-50 p-2 rounded">
                 <div className="font-semibold text-gray-600">X̄ (Process Mean)</div>
                 <div className="text-gray-800" data-testid={`text-process-mean-${characteristic.id}`}>
@@ -566,15 +566,27 @@ export default function ControlChart({ characteristic }: ControlChartProps) {
                 </div>
               </div>
               <div className="bg-gray-50 p-2 rounded">
-                <div className="font-semibold text-gray-600">Cp</div>
+                <div className="font-semibold text-gray-600">Cp (Short-term)</div>
                 <div className="text-gray-800" data-testid={`text-cp-${characteristic.id}`}>
                   {characteristic.stats.Cp?.toFixed(3) || 'N/A'}
                 </div>
               </div>
               <div className="bg-gray-50 p-2 rounded">
-                <div className="font-semibold text-gray-600">Cpk</div>
+                <div className="font-semibold text-gray-600">Cpk (Short-term)</div>
                 <div className="text-gray-800" data-testid={`text-cpk-${characteristic.id}`}>
                   {characteristic.stats.Cpk?.toFixed(3) || 'N/A'}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-2 rounded">
+                <div className="font-semibold text-gray-600">Pp (Long-term)</div>
+                <div className="text-gray-800" data-testid={`text-pp-${characteristic.id}`}>
+                  {characteristic.stats.Pp?.toFixed(3) || 'N/A'}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-2 rounded">
+                <div className="font-semibold text-gray-600">Ppk (Long-term)</div>
+                <div className="text-gray-800" data-testid={`text-ppk-${characteristic.id}`}>
+                  {characteristic.stats.Ppk?.toFixed(3) || 'N/A'}
                 </div>
               </div>
               <div className="bg-blue-50 p-2 rounded">

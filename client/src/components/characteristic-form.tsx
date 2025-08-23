@@ -60,7 +60,7 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
         // Calculate basic statistics on all data points
         let stats = null;
         if (nominalValue && upperTolValue !== null && lowerTolValue !== null) {
-          stats = calculateStatistics(allDataPoints, nominalValue, upperTolValue, lowerTolValue);
+          stats = calculateStatistics(allDataPoints, nominalValue, upperTolValue, lowerTolValue, sigmaWithin);
         }
         
         const updatedCharacteristic: Characteristic = {
