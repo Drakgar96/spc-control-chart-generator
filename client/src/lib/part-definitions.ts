@@ -35,7 +35,51 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
       {name: 'No burrs on the edges',type: 'attribute',initialValues: { subgroupSize: '200', usl: null, lsl: null, nominalValue: null, data: '200,1\n200,0\n200,1\n200,2\n200,0\n200,1\n200,1\n200,0\n200,2\n200,1' }}
     ]
   },
-  // Additional part configurations can be added here
+  'lamella-profile': {
+    name: 'Lamella Profile HY10 - 123 257',
+    characteristics: [
+      {name: 'Width Measurement', type: 'variable', initialValues: { subgroupSize: '4', usl: '80.3', lsl: '79.7', nominalValue: '80.0', data: '80.1, 80.0, 79.9, 80.2\n79.8, 80.1, 80.0, 79.9\n80.2, 80.1, 79.8, 80.0\n80.0, 79.9, 80.1, 80.2\n79.9, 80.0, 80.1, 79.8' }},
+      {name: 'Surface Quality Check', type: 'attribute', initialValues: { subgroupSize: '150', usl: null, lsl: null, nominalValue: null, data: '150,2\n150,1\n150,3\n150,2\n150,1\n150,0\n150,2\n150,3\n150,1\n150,2' }}
+    ]
+  },
+  'rh-side-profile': {
+    name: 'RH Side Profile HY10 - 142 942',
+    characteristics: [
+      {name: 'Height Dimension', type: 'variable', initialValues: { subgroupSize: '3', usl: '95.4', lsl: '94.6', nominalValue: '95.0', data: '95.1, 94.9, 95.0\n95.2, 94.8, 95.1\n94.9, 95.0, 95.2\n95.0, 94.7, 95.1\n95.1, 95.0, 94.9' }},
+      {name: 'Angle Verification', type: 'variable', initialValues: { subgroupSize: '3', usl: '46.0', lsl: '44.0', nominalValue: '45.0', data: '45.2, 44.8, 45.0\n45.1, 44.9, 45.3\n44.7, 45.0, 45.2\n45.0, 44.8, 45.1\n45.2, 45.0, 44.9' }}
+    ]
+  },
+  'lh-side-profile': {
+    name: 'LH Side Profile HY10 - 142 943',
+    characteristics: [
+      {name: 'Height Dimension', type: 'variable', initialValues: { subgroupSize: '3', usl: '95.4', lsl: '94.6', nominalValue: '95.0', data: '94.8, 95.2, 95.0\n95.1, 94.9, 95.0\n95.0, 94.7, 95.1\n94.9, 95.1, 95.2\n95.0, 94.8, 95.1' }},
+      {name: 'Angle Verification', type: 'variable', initialValues: { subgroupSize: '3', usl: '46.0', lsl: '44.0', nominalValue: '45.0', data: '44.9, 45.1, 45.0\n45.2, 44.8, 45.0\n45.0, 45.3, 44.7\n45.1, 44.9, 45.2\n44.8, 45.0, 45.1' }}
+    ]
+  },
+  'lid-profile': {
+    name: 'Lid Profile HY10 - 142 421',
+    characteristics: [
+      {name: 'Outer Diameter', type: 'variable', initialValues: { subgroupSize: '4', usl: '120.3', lsl: '119.7', nominalValue: '120.0', data: '120.1, 119.9, 120.0, 120.2\n119.8, 120.1, 120.0, 119.9\n120.0, 119.8, 120.2, 120.1\n120.1, 120.0, 119.9, 120.0\n119.9, 120.2, 120.0, 119.8' }},
+      {name: 'Inner Diameter', type: 'variable', initialValues: { subgroupSize: '4', usl: '110.2', lsl: '109.8', nominalValue: '110.0', data: '110.1, 109.9, 110.0, 110.1\n109.9, 110.0, 110.1, 109.8\n110.0, 109.9, 110.1, 110.0\n110.1, 110.0, 109.9, 110.0\n109.8, 110.1, 110.0, 109.9' }},
+      {name: 'Concentricity Check', type: 'attribute', initialValues: { subgroupSize: '100', usl: null, lsl: null, nominalValue: null, data: '100,1\n100,0\n100,2\n100,1\n100,0\n100,1\n100,2\n100,0\n100,1\n100,1' }}
+    ]
+  },
+  'front-profile': {
+    name: 'Front Profile HY10 - 142 408',
+    characteristics: [
+      {name: 'Overall Length', type: 'variable', initialValues: { subgroupSize: '5', usl: '200.6', lsl: '199.4', nominalValue: '200.0', data: '200.2, 199.8, 200.0, 200.1, 199.9\n200.0, 199.7, 200.2, 200.1, 199.8\n199.9, 200.1, 200.0, 199.8, 200.2\n200.1, 199.9, 200.0, 200.2, 199.7\n200.0, 200.1, 199.8, 199.9, 200.2' }},
+      {name: 'Mounting Hole Diameter', type: 'variable', initialValues: { subgroupSize: '5', usl: '8.1', lsl: '7.9', nominalValue: '8.0', data: '8.0, 7.9, 8.1, 8.0, 7.9\n8.1, 8.0, 7.9, 8.0, 8.1\n7.9, 8.0, 8.1, 8.0, 7.9\n8.0, 8.1, 7.9, 8.0, 8.1\n8.1, 7.9, 8.0, 8.0, 7.9' }},
+      {name: 'Assembly Clearance', type: 'attribute', initialValues: { subgroupSize: '50', usl: null, lsl: null, nominalValue: null, data: '50,1\n50,0\n50,2\n50,1\n50,0\n50,1\n50,0\n50,2\n50,1\n50,0' }}
+    ]
+  },
+  'rear-profile': {
+    name: 'Rear Profile HY10 - 142 221',
+    characteristics: [
+      {name: 'Overall Width', type: 'variable', initialValues: { subgroupSize: '4', usl: '180.5', lsl: '179.5', nominalValue: '180.0', data: '180.1, 179.9, 180.0, 180.2\n179.8, 180.1, 180.0, 179.7\n180.0, 179.9, 180.2, 180.1\n180.1, 180.0, 179.8, 179.9\n179.9, 180.2, 180.0, 179.8' }},
+      {name: 'Step Height', type: 'variable', initialValues: { subgroupSize: '4', usl: '15.2', lsl: '14.8', nominalValue: '15.0', data: '15.0, 14.9, 15.1, 15.0\n14.8, 15.1, 15.0, 14.9\n15.0, 14.9, 15.2, 15.1\n15.1, 15.0, 14.8, 14.9\n14.9, 15.2, 15.0, 14.8' }},
+      {name: 'Surface Finish', type: 'attribute', initialValues: { subgroupSize: '75', usl: null, lsl: null, nominalValue: null, data: '75,1\n75,2\n75,0\n75,1\n75,1\n75,0\n75,2\n75,1\n75,0\n75,1' }}
+    ]
+  }
 };
 
 export const partDefinitions: Record<string, PartDefinition> = {
