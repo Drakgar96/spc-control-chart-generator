@@ -19,7 +19,7 @@ function normalCDF(x: number): number {
   return 0.5 * (1 + erf(x / Math.sqrt(2)));
 }
 
-// Anderson-Darling test function
+// Anderson-Darling test function - using exact function provided by user
 export function andersonDarlingTest(data: number[]): { a2: number | null; pValue: number | null } {
   const n = data.length;
   if (n < 8) {

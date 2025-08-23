@@ -2,13 +2,13 @@ import { PartDefinition } from '@/types/spc';
 
 export const PART_IMAGES = {
   'default': null,
-  'axle-profile': 'https://drive.google.com/thumbnail?id=10pDdEq7ur5BwYiKwR0L9uYyQphysJlbN&sz=w1000',
-  'lamella-profile': 'https://drive.google.com/thumbnail?id=1d_96kHTQjRFqNrPrAeeMe037KgnXfwL0&sz=w1000',
-  'rh-side-profile': 'https://drive.google.com/thumbnail?id=1fs3C2Le43kl2u4qQ30xu-23iEm3kFqzG&sz=w1000',
-  'lh-side-profile': 'https://drive.google.com/thumbnail?id=1CC0puIR6yfMEh6G4cXjOePl08qrlV0zH&sz=w1000',
-  'lid-profile': 'https://drive.google.com/thumbnail?id=13fDJNLHItmOlOAGYOqbjG5DfjHheTlWw&sz=w1000',
-  'front-profile': 'https://drive.google.com/thumbnail?id=1spCqCtuj73d20YLhg9qbtNVsPp8qdnMp&sz=w1000',
-  'rear-profile': 'https://drive.google.com/thumbnail?id=1P5IWM78GxsqczU0deiLGB46Mw7WGBFZz&sz=w1000'
+  'axle-profile': 'https://lh3.googleusercontent.com/d/10pDdEq7ur5BwYiKwR0L9uYyQphysJlbN',
+  'lamella-profile': 'https://lh3.googleusercontent.com/d/1d_96kHTQjRFqNrPrAeeMe037KgnXfwL0',
+  'rh-side-profile': 'https://lh3.googleusercontent.com/d/1fs3C2Le43kl2u4qQ30xu-23iEm3kFqzG',
+  'lh-side-profile': 'https://lh3.googleusercontent.com/d/1CC0puIR6yfMEh6G4cXjOePl08qrlV0zH',
+  'lid-profile': 'https://lh3.googleusercontent.com/d/13fDJNLHItmOlOAGYOqbjG5DfjHheTlWw',
+  'front-profile': 'https://lh3.googleusercontent.com/d/1spCqCtuj73d20YLhg9qbtNVsPp8qdnMp',
+  'rear-profile': 'https://lh3.googleusercontent.com/d/1P5IWM78GxsqczU0deiLGB46Mw7WGBFZz'
 };
 
 export const PART_CONFIGS: Record<string, { name: string; characteristics: { name: string; type: string; initialValues: any }[] }> = {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Characteristic, DocumentControl } from '@/types/spc';
 import { calculateStatistics } from '@/lib/statistical-calculations';
 import { partDefinitions } from '@/lib/part-definitions';
@@ -27,24 +27,6 @@ export default function SPCGenerator() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Initialize with one characteristic
-  useEffect(() => {
-    if (characteristics.length === 0) {
-      const newCharacteristic: Characteristic = {
-        id: 'char_1',
-        name: 'Characteristic 1',
-        nominal: 100.0,
-        upperTol: 0.5,
-        lowerTol: -0.5,
-        unit: 'mm',
-        data: [],
-        stats: null
-      };
-      setCharacteristics([newCharacteristic]);
-      setCharacteristicCounter(1);
-    }
-  }, []);
-
   const addNewCharacteristic = useCallback((predefined?: any) => {
     const newCounter = characteristicCounter + 1;
     setCharacteristicCounter(newCounter);
@@ -70,6 +52,13 @@ export default function SPCGenerator() {
 
     setCharacteristics(prev => [...prev, newCharacteristic]);
   }, [characteristicCounter]);
+
+  // Initialize with one characteristic
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && addNewCharacteristic) {
+    addNewCharacteristic();
+    setInitialized(true);
+  }
 
   const removeCharacteristic = useCallback((id: string) => {
     setCharacteristics(prev => prev.filter(char => char.id !== id));
