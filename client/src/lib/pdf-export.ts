@@ -33,6 +33,9 @@ export async function exportToPdf(): Promise<void> {
     // Update print-only content with current values
     await updatePrintOnlyContent();
 
+    // Wait for any pending chart renders to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     let pageCount = 0;
 
     // Page 1: Cover Page (Document Control + Part Info)
@@ -230,6 +233,33 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   // Clone the characteristic content
   const clonedCharacteristic = characteristicElement.cloneNode(true) as HTMLElement;
   
+  // Find and replace chart canvases with their rendered images
+  const originalChartCanvases = characteristicElement.querySelectorAll('canvas');
+  const clonedChartCanvases = clonedCharacteristic.querySelectorAll('canvas');
+  
+  for (let i = 0; i < originalChartCanvases.length && i < clonedChartCanvases.length; i++) {
+    const originalCanvas = originalChartCanvases[i] as HTMLCanvasElement;
+    const clonedCanvas = clonedChartCanvases[i] as HTMLCanvasElement;
+    
+    try {
+      // Get the chart data URL from the original canvas
+      const dataURL = originalCanvas.toDataURL('image/png');
+      
+      // Create an image element to replace the canvas
+      const img = document.createElement('img');
+      img.src = dataURL;
+      img.style.width = '100%';
+      img.style.height = originalCanvas.style.height || '250px';
+      img.style.maxWidth = '100%';
+      img.style.display = 'block';
+      
+      // Replace the cloned canvas with the image
+      clonedCanvas.parentNode?.replaceChild(img, clonedCanvas);
+    } catch (error) {
+      console.warn('Failed to convert canvas to image:', error);
+    }
+  }
+  
   // Adjust chart container sizes for better fit on page
   const chartContainers = clonedCharacteristic.querySelectorAll('.chart-container');
   chartContainers.forEach(container => {
@@ -256,13 +286,30 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   pageContainer.appendChild(clonedCharacteristic);
   document.body.appendChild(pageContainer);
 
+  // Wait for images to load
+  const images = pageContainer.querySelectorAll('img');
+  await Promise.all(Array.from(images).map(img => {
+    return new Promise<void>((resolve) => {
+      if (img.complete) {
+        resolve();
+      } else {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      }
+    });
+  }));
+
   const canvas = await window.html2canvas(pageContainer, {
     scale: 1.5,
     useCORS: true,
     allowTaint: true,
     backgroundColor: '#ffffff',
     width: 800,
-    height: 1100
+    height: 1100,
+    ignoreElements: (element) => {
+      // Ignore any remaining canvas elements
+      return element.tagName === 'CANVAS';
+    }
   });
 
   document.body.removeChild(pageContainer);

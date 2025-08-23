@@ -169,6 +169,19 @@ canvas {
   display: block !important;
 }
 
+/* Ensure charts are visible and properly sized for PDF export */
+.pdf-characteristic-page canvas,
+.pdf-characteristic-page img {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.pdf-characteristic-page .chart-container {
+  overflow: visible !important;
+  height: 250px !important;
+}
+
 /* Page break helpers for PDF export */
 .page-break-before {
   page-break-before: always;
