@@ -224,7 +224,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   const pageContainer = document.createElement('div');
   pageContainer.className = 'pdf-characteristic-page';
   pageContainer.style.width = '800px';
-  pageContainer.style.height = '1100px';
+  pageContainer.style.height = '1300px'; // Increased height to prevent cropping
   pageContainer.style.position = 'absolute';
   pageContainer.style.top = '-9999px';
   pageContainer.style.background = 'white';
@@ -263,16 +263,25 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   // Adjust chart container sizes for better fit on page
   const chartContainers = clonedCharacteristic.querySelectorAll('.chart-container');
   chartContainers.forEach(container => {
-    (container as HTMLElement).style.height = '250px';
-    (container as HTMLElement).style.marginBottom = '10px';
+    (container as HTMLElement).style.height = '220px'; // Slightly smaller charts
+    (container as HTMLElement).style.marginBottom = '8px';
+    (container as HTMLElement).style.overflow = 'visible';
   });
 
   // Adjust text sizes for better PDF rendering
-  clonedCharacteristic.style.fontSize = '12px';
+  clonedCharacteristic.style.fontSize = '11px'; // Slightly smaller text
+  clonedCharacteristic.style.lineHeight = '1.3';
   
   const textElements = clonedCharacteristic.querySelectorAll('h3, .text-lg');
   textElements.forEach(el => {
-    (el as HTMLElement).style.fontSize = '16px';
+    (el as HTMLElement).style.fontSize = '14px'; // Reduced from 16px
+    (el as HTMLElement).style.marginBottom = '6px'; // Reduced spacing
+    (el as HTMLElement).style.lineHeight = '1.2';
+  });
+
+  // Adjust spacing elements
+  const spacingElements = clonedCharacteristic.querySelectorAll('.space-y-4, .space-y-6, .mb-4, .mb-6');
+  spacingElements.forEach(el => {
     (el as HTMLElement).style.marginBottom = '8px';
   });
 
@@ -280,7 +289,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   const gridElements = clonedCharacteristic.querySelectorAll('.grid');
   gridElements.forEach(el => {
     (el as HTMLElement).style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
-    (el as HTMLElement).style.gap = '8px';
+    (el as HTMLElement).style.gap = '6px'; // Reduced gap
   });
 
   pageContainer.appendChild(clonedCharacteristic);
@@ -305,7 +314,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
     allowTaint: true,
     backgroundColor: '#ffffff',
     width: 800,
-    height: 1100,
+    height: 1300, // Match the increased container height
     ignoreElements: (element) => {
       // Ignore any remaining canvas elements
       return element.tagName === 'CANVAS';
