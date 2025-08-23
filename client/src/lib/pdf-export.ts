@@ -20,7 +20,7 @@ export async function exportToPdf(): Promise<void> {
   
   // Define Letter dimensions in mm (minus margins)
   const pageWidth = 196; // 216mm - 20mm margins
-  const pageHeight = 259; // 279mm - 20mm margins
+  const pageHeight = 269; // 279mm - 10mm margins (5mm top + 5mm bottom)
   
   try {
     // Hide no-print elements
@@ -41,13 +41,13 @@ export async function exportToPdf(): Promise<void> {
     // Page 1: Cover Page (Document Control + Part Info)
     const coverPageData = await createCoverPage();
     if (pageCount > 0) pdf.addPage();
-    pdf.addImage(coverPageData, 'PNG', 10, 15, pageWidth, pageHeight);
+    pdf.addImage(coverPageData, 'PNG', 10, 5, pageWidth, pageHeight);
     pageCount++;
 
     // Page 2: Summary Page
     const summaryPageData = await createSummaryPage();
     if (pageCount > 0) pdf.addPage();
-    pdf.addImage(summaryPageData, 'PNG', 10, 15, pageWidth, pageHeight);
+    pdf.addImage(summaryPageData, 'PNG', 10, 5, pageWidth, pageHeight);
     pageCount++;
 
     // Following Pages: Individual Characteristic Pages
@@ -66,7 +66,7 @@ export async function exportToPdf(): Promise<void> {
       const characteristicPageData = await createCharacteristicPage(charId);
       if (characteristicPageData) {
         if (pageCount > 0) pdf.addPage();
-        pdf.addImage(characteristicPageData, 'PNG', 10, 15, pageWidth, pageHeight);
+        pdf.addImage(characteristicPageData, 'PNG', 10, 5, pageWidth, pageHeight);
         pageCount++;
       }
     }
