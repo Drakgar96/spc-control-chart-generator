@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Characteristic, DocumentControl } from '@/types/spc';
-import { calculateStatistics } from '@/lib/statistical-calculations';
-import { partDefinitions } from '@/lib/part-definitions';
+import { PART_CONFIGS } from '@/lib/part-definitions';
 import { exportToPdf } from '@/lib/pdf-export';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -33,21 +32,30 @@ export default function SPCGenerator() {
     
     const defaultChar = predefined || {
       name: `Characteristic ${newCounter}`,
-      nominal: 100.0,
-      upperTol: 0.5,
-      lowerTol: -0.5,
-      unit: 'mm'
+      type: 'variable' as 'variable' | 'attribute',
+      initialValues: {
+        subgroupSize: '4',
+        nominalValue: '1000',
+        usl: '1',
+        lsl: '-1',
+        data: ''
+      }
     };
 
     const newCharacteristic: Characteristic = {
       id: `char_${newCounter}`,
       name: defaultChar.name,
-      nominal: defaultChar.nominal,
-      upperTol: defaultChar.upperTol,
-      lowerTol: defaultChar.lowerTol,
-      unit: defaultChar.unit,
+      type: defaultChar.type || 'variable',
+      subgroupSize: parseInt(defaultChar.initialValues?.subgroupSize || '4'),
+      nominal: defaultChar.initialValues?.nominalValue ? parseFloat(defaultChar.initialValues.nominalValue) : null,
+      upperTol: defaultChar.initialValues?.usl ? parseFloat(defaultChar.initialValues.usl) : null,
+      lowerTol: defaultChar.initialValues?.lsl ? parseFloat(defaultChar.initialValues.lsl) : null,
+      unit: 'mm',
+      dataText: defaultChar.initialValues?.data || '',
       data: [],
-      stats: null
+      stats: null,
+      spcStats: null,
+      pChartStats: null
     };
 
     setCharacteristics(prev => [...prev, newCharacteristic]);
@@ -72,61 +80,21 @@ export default function SPCGenerator() {
     );
   }, []);
 
-  const generateChart = useCallback((characteristicId: string) => {
-    const characteristic = characteristics.find(char => char.id === characteristicId);
-    if (!characteristic || characteristic.data.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please enter measurement data first.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const stats = calculateStatistics(
-        characteristic.data,
-        characteristic.nominal,
-        characteristic.upperTol,
-        characteristic.lowerTol
-      );
-
-      const updatedCharacteristic = { ...characteristic, stats };
-      updateCharacteristic(updatedCharacteristic);
-
-      toast({
-        title: "Success",
-        description: `Chart generated for ${characteristic.name}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to calculate statistics. Please check your data.",
-        variant: "destructive"
-      });
-    }
-  }, [characteristics, updateCharacteristic, toast]);
-
   const generateAllCharts = useCallback(() => {
     let generatedCount = 0;
     
+    // This function triggers chart generation for all characteristics that have data
     characteristics.forEach(char => {
-      if (char.data && char.data.length > 0) {
-        try {
-          const stats = calculateStatistics(char.data, char.nominal, char.upperTol, char.lowerTol);
-          const updatedCharacteristic = { ...char, stats };
-          updateCharacteristic(updatedCharacteristic);
-          generatedCount++;
-        } catch (error) {
-          console.error(`Failed to generate chart for ${char.name}:`, error);
-        }
+      if ((char.type === 'variable' && char.subgroups && char.subgroups.length > 0) ||
+          (char.type === 'attribute' && char.attributeData && char.attributeData.length > 0)) {
+        generatedCount++;
       }
     });
 
     if (generatedCount > 0) {
       toast({
-        title: "Success",
-        description: `Generated ${generatedCount} charts successfully.`,
+        title: "Info",
+        description: `Found ${generatedCount} characteristics with data. Use the "Update Data & Calculate Statistics" button on each characteristic to generate charts.`,
       });
     } else {
       toast({
@@ -135,13 +103,13 @@ export default function SPCGenerator() {
         variant: "destructive"
       });
     }
-  }, [characteristics, updateCharacteristic, toast]);
+  }, [characteristics, toast]);
 
   const handlePartSelection = useCallback((partKey: string) => {
     setSelectedPart(partKey);
 
-    if (partKey !== 'default' && partDefinitions[partKey]) {
-      const partDef = partDefinitions[partKey];
+    if (partKey !== 'default' && PART_CONFIGS[partKey]) {
+      const partConfig = PART_CONFIGS[partKey];
       
       // Clear existing characteristics
       setCharacteristics([]);
@@ -149,17 +117,22 @@ export default function SPCGenerator() {
 
       // Add predefined characteristics
       let counter = 0;
-      partDef.characteristics.forEach(char => {
+      partConfig.characteristics.forEach(charConfig => {
         counter++;
         const newCharacteristic: Characteristic = {
           id: `char_${counter}`,
-          name: char.name,
-          nominal: char.nominal,
-          upperTol: char.upperTol,
-          lowerTol: char.lowerTol,
-          unit: char.unit,
+          name: charConfig.name,
+          type: charConfig.type as 'variable' | 'attribute',
+          subgroupSize: parseInt(charConfig.initialValues.subgroupSize),
+          nominal: charConfig.initialValues.nominalValue ? parseFloat(charConfig.initialValues.nominalValue) : null,
+          upperTol: charConfig.initialValues.usl ? parseFloat(charConfig.initialValues.usl) : null,
+          lowerTol: charConfig.initialValues.lsl ? parseFloat(charConfig.initialValues.lsl) : null,
+          unit: charConfig.type === 'variable' ? 'mm' : '',
+          dataText: charConfig.initialValues.data,
           data: [],
-          stats: null
+          stats: null,
+          spcStats: null,
+          pChartStats: null
         };
         setCharacteristics(prev => [...prev, newCharacteristic]);
       });
@@ -205,7 +178,10 @@ export default function SPCGenerator() {
     }
   }, [addNewCharacteristic, toast]);
 
-  const chartsWithData = characteristics.filter(char => char.stats !== null);
+  const chartsWithData = characteristics.filter(char => 
+    (char.type === 'variable' && char.spcStats) || 
+    (char.type === 'attribute' && char.pChartStats)
+  );
 
   return (
     <div className="bg-gray-100 p-4 sm:p-8 min-h-screen">
@@ -224,7 +200,7 @@ export default function SPCGenerator() {
           SPC Control Chart Generator
         </h1>
         <p className="text-center text-gray-500 mb-8 no-print">
-          Analyze multiple characteristics at once.
+          Statistical Process Control with Variable and Attribute Analysis
         </p>
 
         {/* Document Control Section */}
@@ -236,7 +212,7 @@ export default function SPCGenerator() {
         {/* Main Control Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 no-print">
           <Button
-            onClick={addNewCharacteristic}
+            onClick={() => addNewCharacteristic()}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
             data-testid="button-add-characteristic"
           >
@@ -276,15 +252,14 @@ export default function SPCGenerator() {
             <CharacteristicForm
               key={characteristic.id}
               characteristic={characteristic}
-              onCharacteristicChange={updateCharacteristic}
-              onRemove={() => removeCharacteristic(characteristic.id)}
-              onGenerateChart={() => generateChart(characteristic.id)}
+              onUpdate={updateCharacteristic}
+              onDelete={removeCharacteristic}
             />
           ))}
         </div>
 
         {/* Charts Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12" data-testid="container-charts">
+        <div className="space-y-8 mb-12" data-testid="container-charts">
           {chartsWithData.map(characteristic => (
             <ControlChart key={characteristic.id} characteristic={characteristic} />
           ))}
