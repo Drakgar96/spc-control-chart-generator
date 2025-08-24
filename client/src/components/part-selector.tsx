@@ -33,6 +33,7 @@ export default function PartSelector({ selectedPart, onPartChange }: PartSelecto
             <option value="lid-profile">Lid Profile HY10 - 142 421</option>
             <option value="front-profile">Front Profile HY10 - 142 408</option>
             <option value="rear-profile">Rear Profile HY10 - 142 221</option>
+            <option value="pull-force">Pull Force Test</option>
           </select>
           <div className="print-only hidden mt-2">
             <span className="font-medium text-gray-700">Analyzed Part: </span>
