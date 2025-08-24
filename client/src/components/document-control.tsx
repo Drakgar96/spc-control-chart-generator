@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { DocumentControl } from '@/types/spc';
 
+// Utility function to format date as mmm/dd/yyyy
+const formatDateForDisplay = (dateString: string): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[date.getMonth()]}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+};
+
 interface DocumentControlProps {
   onDocumentControlChange: (control: DocumentControl) => void;
 }
@@ -102,7 +111,7 @@ export default function DocumentControlSection({ onDocumentControlChange }: Docu
         </div>
         <div>
           <label htmlFor="reportStartDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Report Valid From
+            Analysis Start Date
           </label>
           <input
             type="date"
@@ -116,7 +125,7 @@ export default function DocumentControlSection({ onDocumentControlChange }: Docu
         </div>
         <div>
           <label htmlFor="reportEndDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Report Valid To
+            Analysis End Date
           </label>
           <input
             type="date"
