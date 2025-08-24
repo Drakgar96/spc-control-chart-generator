@@ -39,7 +39,7 @@ export default function PartSelector({ selectedPart, onPartChange }: PartSelecto
             <span id="selectedPartName" data-testid="text-selected-part">{selectedPartName}</span>
           </div>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex flex-col items-center">
           <label className="block text-sm font-medium text-gray-700 mb-2">Part Image</label>
           <div className="w-full lg:w-80 h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
             {partImage ? (
