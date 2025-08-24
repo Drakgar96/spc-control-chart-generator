@@ -258,6 +258,8 @@ export default function ControlChart({ characteristic }: ControlChartProps) {
     if (!ctx) return;
 
     const { allDataPoints } = characteristic.spcStats;
+    if (!allDataPoints || allDataPoints.length === 0) return;
+    
     const n = allDataPoints.length;
     const sortedData = [...allDataPoints].sort((a, b) => a - b);
 
@@ -357,6 +359,8 @@ export default function ControlChart({ characteristic }: ControlChartProps) {
     if (!ctx) return;
 
     const { allDataPoints } = characteristic.spcStats;
+    if (!allDataPoints || allDataPoints.length === 0) return;
+    
     const { mean, stdDev } = characteristic.stats;
 
     // Generate theoretical normal curve

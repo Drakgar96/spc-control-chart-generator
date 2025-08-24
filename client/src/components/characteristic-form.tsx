@@ -66,6 +66,13 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
         const allDataPoints = subgroups.flat();
         const sigmaWithin = calculateSigmaWithin(subgroups);
 
+        // Add required properties for charts
+        const enhancedSpcStats = {
+          ...spcStats,
+          allDataPoints,
+          sigmaWithin
+        };
+
         // Calculate basic statistics on all data points
         let stats = null;
         if (nominalValue && upperTolValue !== null && lowerTolValue !== null) {
@@ -85,7 +92,7 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
           data: allDataPoints,
           subgroups,
           stats,
-          spcStats
+          spcStats: enhancedSpcStats
         };
 
         onUpdate(updatedCharacteristic);
