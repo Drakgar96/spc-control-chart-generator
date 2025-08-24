@@ -61,10 +61,12 @@ export default function SPCGenerator() {
     setCharacteristics(prev => [...prev, newCharacteristic]);
   }, [characteristicCounter]);
 
-  // Initialize with one characteristic
+  // Initialize with one characteristic only if no part is selected
   const [initialized, setInitialized] = useState(false);
-  if (!initialized && addNewCharacteristic) {
-    addNewCharacteristic();
+  if (!initialized) {
+    if (selectedPart === 'default' && addNewCharacteristic) {
+      addNewCharacteristic();
+    }
     setInitialized(true);
   }
 
