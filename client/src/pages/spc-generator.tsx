@@ -44,14 +44,14 @@ export default function SPCGenerator() {
 
     const newCharacteristic: Characteristic = {
       id: `char_${newCounter}`,
-      name: defaultChar.name,
-      type: defaultChar.type || 'variable',
-      subgroupSize: parseInt(defaultChar.initialValues?.subgroupSize || '4') || 4,
-      nominal: defaultChar.initialValues?.nominalValue ? parseFloat(defaultChar.initialValues.nominalValue) : null,
-      upperTol: defaultChar.initialValues?.usl ? parseFloat(defaultChar.initialValues.usl) : null,
-      lowerTol: defaultChar.initialValues?.lsl ? parseFloat(defaultChar.initialValues.lsl) : null,
-      unit: 'mm',
-      dataText: defaultChar.initialValues?.data || '',
+      name: predefined ? predefined.name : defaultChar.name,
+      type: predefined ? (predefined.type as 'variable' | 'attribute') : defaultChar.type,
+      subgroupSize: parseInt(predefined?.initialValues?.subgroupSize || defaultChar.initialValues.subgroupSize) || 4,
+      nominal: predefined?.initialValues?.nominalValue ? parseFloat(predefined.initialValues.nominalValue) : (defaultChar.initialValues.nominalValue ? parseFloat(defaultChar.initialValues.nominalValue) : null),
+      upperTol: predefined?.initialValues?.usl ? parseFloat(predefined.initialValues.usl) : (defaultChar.initialValues.usl ? parseFloat(defaultChar.initialValues.usl) : null),
+      lowerTol: predefined?.initialValues?.lsl ? parseFloat(predefined.initialValues.lsl) : (defaultChar.initialValues.lsl ? parseFloat(defaultChar.initialValues.lsl) : null),
+      unit: predefined?.initialValues?.unit || (predefined?.type === 'variable' ? 'mm' : '') || 'mm',
+      dataText: predefined?.initialValues?.data || defaultChar.initialValues.data || '',
       data: [],
       stats: null,
       spcStats: null,
@@ -120,8 +120,17 @@ export default function SPCGenerator() {
       const newCharacteristics: Characteristic[] = [];
       partConfig.characteristics.forEach(charConfig => {
         counter++;
+        addNewCharacteristic(charConfig);
+      });
+      // Since addNewCharacteristic is async, we need to handle this differently
+      // Clear first, then add characteristics directly
+      setCharacteristics([]);
+      setCharacteristicCounter(0);
+      
+      // Create characteristics directly
+      partConfig.characteristics.forEach((charConfig, index) => {
         const newCharacteristic: Characteristic = {
-          id: `char_${counter}`,
+          id: `char_${index + 1}`,
           name: charConfig.name,
           type: charConfig.type as 'variable' | 'attribute',
           subgroupSize: parseInt(charConfig.initialValues.subgroupSize) || 4,
@@ -138,7 +147,7 @@ export default function SPCGenerator() {
         newCharacteristics.push(newCharacteristic);
       });
       setCharacteristics(newCharacteristics);
-      setCharacteristicCounter(counter);
+      setCharacteristicCounter(partConfig.characteristics.length);
     } else {
       // Reset to default
       setCharacteristics([]);
