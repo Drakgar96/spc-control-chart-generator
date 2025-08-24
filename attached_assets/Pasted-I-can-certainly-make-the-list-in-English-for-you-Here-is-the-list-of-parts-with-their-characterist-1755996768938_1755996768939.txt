@@ -1,0 +1,370 @@
+I can certainly make the list in English for you.
+
+Here is the list of parts with their characteristics, type of characteristic, and initial values, without the data.
+
+Axle-profile
+Measured Length
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 5, usl: 1253.5, lsl: 1252.5, nominalValue: 1253
+
+Surface free and straight edges
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 200, usl: null, lsl: null, nominalValue: null
+
+No burrs on the edges
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 200, usl: null, lsl: null, nominalValue: null
+
+Lamella-profile
+Measured Length
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, usl: 1258, lsl: 1256, nominalValue: 1257
+
+Surface dent free and paint covered
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 150, usl: null, lsl: null, nominalValue: null
+
+Fix 332 Lamella Thread
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 150, usl: null, lsl: null, nominalValue: null
+
+RH-side-profile
+Measured Length
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 1188.5, usl: 1189.2, lsl: 1187.8
+
+Final Lock Slot to Flush Cut Distance (Q. E1)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 78, usl: 78.3, lsl: 77.7
+
+Middle Lock Slot Width (Q. F4)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 14.8, usl: 14.9, lsl: 14.7
+
+Middle Lock Slot Height (Q. F4)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 8, usl: 8.2, lsl: 7.8
+
+Final Lock Slot Width (Q. F2)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 28, usl: 28.2, lsl: 27.8
+
+Final Lock Slot Height Location Distance (Q. F2)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 15.1, usl: 15.3, lsl: 14.9
+
+Final Lock Slot to Rear Side Distance (Q. F1)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 50, usl: 50.3, lsl: 49.7
+
+Distance between Final and Middle Lock Slots (Q. E3)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 377.2, usl: 377.7, lsl: 376.7
+
+Machined Slot Width for Carpet Width (Q. E7)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 160.9, usl: 161.4, lsl: 160.4
+
+Machined Slot for Canister Hole (Q. C7)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 36, usl: 36.3, lsl: 35.7
+
+Machined Slot for Canister Hole (Q. C6)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 36, usl: 36.3, lsl: 35.7
+
+Machined Slot Height for Canister Hole (Q. C7)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 16, usl: 16.2, lsl: 15.8
+
+Surface Free of Dents, Scratches and/or Metal Shavings
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 200
+
+Channel Validation Tool Sliding
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 200
+
+LH-side-profile
+Measured Length
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 1188.5, usl: 1189.2, lsl: 1187.8
+
+Final Lock Slot to Flush Cut Distance (Q. E1)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 78, usl: 78.3, lsl: 77.7
+
+Middle Lock Slot Width (Q. F4)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 14.8, usl: 14.9, lsl: 14.7
+
+Middle Lock Slot Height (Q. F4)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 8, usl: 8.2, lsl: 7.8
+
+Final Lock Slot Width (Q. F2)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 28, usl: 28.2, lsl: 27.8
+
+Final Lock Slot Height Location Distance (Q. F2)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 15.1, usl: 15.3, lsl: 14.9
+
+Final Lock Slot to Rear Side Distance (Q. F1)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 50, usl: 50.3, lsl: 49.7
+
+Distance between Final and Middle Lock Slots (Q. E3)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 377.2, usl: 377.7, lsl: 376.7
+
+Machined Slot Width for Carpet Width (Q. E7)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 160.9, usl: 161.4, lsl: 160.4
+
+Machined Slot for Canister Hole (Q. C7)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 36, usl: 36.3, lsl: 35.7
+
+Machined Slot for Canister Hole (Q. C6)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 36, usl: 36.3, lsl: 35.7
+
+Machined Slot Height for Canister Hole (Q. C7)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 16, usl: 16.2, lsl: 15.8
+
+Surface Free of Dents, Scratches and/or Metal Shavings
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 200
+
+Channel Validation Tool Sliding
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 200
+
+Lid-profile
+Measured Length
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 1217.5, usl: 1218.2, lsl: 1216.8
+
+Length from Rear of Lid to LH Hole Center
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 115, usl: 115.3, lsl: 114.7
+
+Length from Rear of Lid to RH Hole Center
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 115, usl: 115.3, lsl: 114.7
+
+Length from Edge to LH Hole
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 10.3, usl: 10.5, lsl: 10.1
+
+Length from Edge to RH Hole
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 10.3, usl: 10.5, lsl: 10.1
+
+LH Hole Internal Diameter
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 7, usl: 7.2, lsl: 6.8
+
+RH Hole Internal Diameter
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 7, usl: 7.2, lsl: 6.8
+
+Surface Free of Scratches, Dents & Evenly Painted/Covered
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 150
+
+Front-profile
+Measured Length
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 1324, usl: 1324.7, lsl: 1323.3
+
+Internal Diameter of LH Side Hole (Q. D7)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 9.5, usl: 10.0, lsl: 9.0
+
+Internal Diameter of Middle Hole
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 9.5, usl: 10.0, lsl: 9.0
+
+Internal Diameter of RH Side Hole (Q. E4)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 9.5, usl: 10.0, lsl: 9.0
+
+Length from Edge to RH Hole
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 9.5, usl: 10.0, lsl: 9.0
+
+Measurement of Processed Cut and Side
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 5, usl: 5.2, lsl: 4.8
+
+Distance between LH Hole Center and Middle Hole Center
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 600, usl: 600.3, lsl: 599.7
+
+Fixture 321 Hole Size/Location Check
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 150
+
+Rear-profile
+Measured Length
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 1157.5, usl: 1158.2, lsl: 1156.8
+
+Lock Hole in Machined Track to Side of Bottom
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 11.1, usl: 11.35, lsl: 10.85
+
+Internal Diameter of LH Hole (Q. E5)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 13, usl: 13.3, lsl: 12.7
+
+Internal Diameter of RH Hole (Q. E4)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 13, usl: 13.3, lsl: 12.7
+
+Distance from Lock Hole to Bottom Side
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 14.11, usl: 14.36, lsl: 13.86
+
+Internal Diameter of Hole (Q. B4)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 9.6, usl: 9.9, lsl: 9.3
+
+Internal Diameter of Hole (Q. B5)
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 9.6, usl: 9.9, lsl: 9.3
+
+Distance between End of Left Side of Rear Profile to Latch Opening
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 457.2, usl: 457.5, lsl: 456.9
+
+Distance between End of Right Side of Rear Profile to Latch Opening
+
+Characteristic Type: variable
+
+Initial Values: subgroupSize: 4, nominalValue: 457.2, usl: 457.5, lsl: 456.9
+
+Surface Free of Dents and Scratches
+
+Characteristic Type: attribute
+
+Initial Values: subgroupSize: 150
