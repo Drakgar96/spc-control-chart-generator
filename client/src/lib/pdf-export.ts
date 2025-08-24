@@ -351,6 +351,15 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   return canvas.toDataURL('image/png');
 }
 
+// Utility function to format date as mmm/dd/yyyy
+function formatDateForDisplay(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[date.getMonth()]}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+}
+
 async function updatePrintOnlyContent(): Promise<void> {
   const documentNumberEl = document.querySelector('.print-only[id*="documentNumber"]') as HTMLElement;
   const revisionNumberEl = document.querySelector('.print-only[id*="revisionNumber"]') as HTMLElement;
@@ -370,17 +379,17 @@ async function updatePrintOnlyContent(): Promise<void> {
 
   if (effectiveDateEl) {
     const input = document.getElementById('effectiveDate') as HTMLInputElement;
-    effectiveDateEl.textContent = input?.value || '';
+    effectiveDateEl.textContent = formatDateForDisplay(input?.value || '');
   }
 
   if (reportStartDateEl) {
     const input = document.getElementById('reportStartDate') as HTMLInputElement;
-    reportStartDateEl.textContent = input?.value || '';
+    reportStartDateEl.textContent = formatDateForDisplay(input?.value || '');
   }
 
   if (reportEndDateEl) {
     const input = document.getElementById('reportEndDate') as HTMLInputElement;
-    reportEndDateEl.textContent = input?.value || '';
+    reportEndDateEl.textContent = formatDateForDisplay(input?.value || '');
   }
 }
 

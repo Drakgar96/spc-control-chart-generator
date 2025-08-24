@@ -102,7 +102,7 @@ export default function DocumentControlSection({ onDocumentControlChange }: Docu
         </div>
         <div>
           <label htmlFor="reportStartDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Report Valid From
+            Analysis Start Date
           </label>
           <input
             type="date"
@@ -116,7 +116,7 @@ export default function DocumentControlSection({ onDocumentControlChange }: Docu
         </div>
         <div>
           <label htmlFor="reportEndDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Report Valid To
+            Analysis End Date
           </label>
           <input
             type="date"
