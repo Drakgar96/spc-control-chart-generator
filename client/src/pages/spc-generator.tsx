@@ -117,6 +117,7 @@ export default function SPCGenerator() {
 
       // Add predefined characteristics
       let counter = 0;
+      const newCharacteristics: Characteristic[] = [];
       partConfig.characteristics.forEach(charConfig => {
         counter++;
         const newCharacteristic: Characteristic = {
@@ -127,15 +128,16 @@ export default function SPCGenerator() {
           nominal: charConfig.initialValues.nominalValue ? parseFloat(charConfig.initialValues.nominalValue) : null,
           upperTol: charConfig.initialValues.usl ? parseFloat(charConfig.initialValues.usl) : null,
           lowerTol: charConfig.initialValues.lsl ? parseFloat(charConfig.initialValues.lsl) : null,
-          unit: charConfig.type === 'variable' ? 'mm' : '',
+          unit: charConfig.initialValues.unit || (charConfig.type === 'variable' ? 'mm' : ''),
           dataText: charConfig.initialValues.data || '',
           data: [],
           stats: null,
           spcStats: null,
           pChartStats: null
         };
-        setCharacteristics(prev => [...prev, newCharacteristic]);
+        newCharacteristics.push(newCharacteristic);
       });
+      setCharacteristics(newCharacteristics);
       setCharacteristicCounter(counter);
     } else {
       // Reset to default

@@ -134,6 +134,7 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
           usl: '14', 
           lsl: '10', 
           nominalValue: '12', 
+          unit: 'N',
           data: '12.1, 11.8, 12.3, 11.9, 12.2\n12.0, 12.4, 11.7, 12.1, 12.0\n11.9, 12.2, 12.1, 11.8, 12.3\n12.2, 12.0, 11.9, 12.1, 12.0\n12.1, 11.9, 12.2, 12.0, 11.8' 
         }
       }
