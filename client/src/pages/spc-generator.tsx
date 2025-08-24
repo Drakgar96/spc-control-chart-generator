@@ -140,30 +140,6 @@ export default function SPCGenerator() {
       addNewCharacteristic();
     }
   }, [addNewCharacteristic]);
-          name: charConfig.name,
-          type: charConfig.type as 'variable' | 'attribute',
-          subgroupSize: parseInt(charConfig.initialValues.subgroupSize) || 4,
-          nominal: charConfig.initialValues.nominalValue ? parseFloat(charConfig.initialValues.nominalValue) : null,
-          upperTol: charConfig.initialValues.usl ? parseFloat(charConfig.initialValues.usl) : null,
-          lowerTol: charConfig.initialValues.lsl ? parseFloat(charConfig.initialValues.lsl) : null,
-          unit: charConfig.initialValues.unit || (charConfig.type === 'variable' ? 'mm' : ''),
-          dataText: charConfig.initialValues.data || '',
-          data: [],
-          stats: null,
-          spcStats: null,
-          pChartStats: null
-        };
-        newCharacteristics.push(newCharacteristic);
-      });
-      setCharacteristics(newCharacteristics);
-      setCharacteristicCounter(partConfig.characteristics.length);
-    } else {
-      // Reset to default
-      setCharacteristics([]);
-      setCharacteristicCounter(0);
-      addNewCharacteristic();
-    }
-  }, [addNewCharacteristic]);
 
   const handleExportPdf = useCallback(async () => {
     setIsLoading(true);
