@@ -19,7 +19,7 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
       {
         name: 'Variable Characteristic',
         type: 'variable',
-        initialValues: { subgroupSize: '4', usl: '1253.5', lsl: '1252.5', nominalValue: '1253', data: '1252.98, 1252.88, 1252.78, 1252.97\n1252.6, 1249.19, 1252.77, 1253.19\n1253.1, 1252.89, 1253, 1253\n1252.9, 1252.88, 1253.1, 1253.38\n1253.12, 1252.64, 1252.8, 1252.88\n1252.66, 1252.57, 1252.62, 1252.5' }
+        initialValues: { subgroupSize: '4', usl: '0.5', lsl: '-0.5', nominalValue: '1253', data: '1252.98, 1252.88, 1252.78, 1252.97\n1252.6, 1249.19, 1252.77, 1253.19\n1253.1, 1252.89, 1253, 1253\n1252.9, 1252.88, 1253.1, 1253.38\n1253.12, 1252.64, 1252.8, 1252.88\n1252.66, 1252.57, 1252.62, 1252.5' }
       },
       {
         name: 'Attribute Characteristic',
@@ -31,7 +31,7 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
   'axle-profile': {
     name: 'Axle Profile HY10 - 148 253',
     characteristics: [
-      {name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '5', usl: '1253.5', lsl: '1252.5', nominalValue: '1253', data: '1253.1, 1253.2, 1253.0, 1253.8, 1253.3\n1253.9, 1253.1, 1253.0, 1253.2, 1253.1\n1253.3, 1253.4, 1253.1, 1253.9, 1253.0\n1253.0, 1253.2, 1253.3, 1253.7, 1253.1\n1253.2, 1253.9, 1253.0, 1253.1, 1253.2' }},
+      {name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '5', usl: '0.5', lsl: '-0.5', nominalValue: '1253', data: '1253.1, 1253.2, 1253.0, 1253.8, 1253.3\n1253.9, 1253.1, 1253.0, 1253.2, 1253.1\n1253.3, 1253.4, 1253.1, 1253.9, 1253.0\n1253.0, 1253.2, 1253.3, 1253.7, 1253.1\n1253.2, 1253.9, 1253.0, 1253.1, 1253.2' }},
       {name: 'Surface free and straight edges', type: 'attribute', initialValues: { subgroupSize: '200', usl: null, lsl: null, nominalValue: null, data: '200,3\n200,4\n200,2\n200,5\n200,3\n200,4\n200,3\n200,6\n200,2\n200,3' }},
       {name: 'No burrs on the edges', type: 'attribute', initialValues: { subgroupSize: '200', usl: null, lsl: null, nominalValue: null, data: '200,1\n200,0\n200,1\n200,2\n200,0\n200,1\n200,1\n200,0\n200,2\n200,1' }}
     ]
@@ -39,7 +39,7 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
   'lamella-profile': {
     name: 'Lamella Profile HY10 - 123 257',
     characteristics: [
-      {name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', usl: '1258', lsl: '1256', nominalValue: '1257', data: '1257.01, 1257.05, 1257.98, 1257.02\n1257.03, 1257.99, 1257.01, 1257.00\n1257.04, 1257.06, 1257.00, 1257.02\n1257.97, 1257.00, 1257.01, 1257.03' }},
+      {name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', usl: '1', lsl: '-1', nominalValue: '1257', data: '1257.01, 1257.05, 1257.98, 1257.02\n1257.03, 1257.99, 1257.01, 1257.00\n1257.04, 1257.06, 1257.00, 1257.02\n1257.97, 1257.00, 1257.01, 1257.03' }},
       {name: 'Surface dent free and paint covered', type: 'attribute', initialValues: { subgroupSize: '150', usl: null, lsl: null, nominalValue: null, data: '150,2\n150,1\n150,3\n150,2\n150,1\n150,2\n150,0\n150,3\n150,1\n150,2' }},
       {name: 'Fix 332 Lamella Thread', type: 'attribute', initialValues: { subgroupSize: '150', usl: null, lsl: null, nominalValue: null, data: '150,0\n150,1\n150,0\n150,0\n150,0\n150,1\n150,0\n150,0\n150,1\n150,0' }}
     ]
@@ -47,8 +47,8 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
   'rh-side-profile': {
     name: 'RH Side Profile HY10 - 142 942',
     characteristics: [
-      { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1188.5', usl: '1189.2', lsl: '1187.8', data: '1188.6, 1188.5, 1188.4, 1188.7\n1188.5, 1188.8, 1188.5, 1188.6\n1188.4, 1188.3, 1188.6, 1188.5\n1188.7, 1188.6, 1188.5, 1188.4' } },
-      { name: 'Final Lock Slot to Flush Cut Distance (Q. E1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '78', usl: '78.3', lsl: '77.7', data: '78.1, 78.0, 78.2, 77.9\n78.0, 78.1, 78.1, 78.0\n78.2, 78.1, 78.0, 78.1\n78.0, 77.9, 78.1, 78.2' } },
+      { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1188.5', usl: '0.7', lsl: '-0.7', data: '1188.6, 1188.5, 1188.4, 1188.7\n1188.5, 1188.8, 1188.5, 1188.6\n1188.4, 1188.3, 1188.6, 1188.5\n1188.7, 1188.6, 1188.5, 1188.4' } },
+      { name: 'Final Lock Slot to Flush Cut Distance (Q. E1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '78', usl: '0.3', lsl: '-0.3', data: '78.1, 78.0, 78.2, 77.9\n78.0, 78.1, 78.1, 78.0\n78.2, 78.1, 78.0, 78.1\n78.0, 77.9, 78.1, 78.2' } },
       { name: 'Middle Lock Slot Width (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '14.8', usl: '14.9', lsl: '14.7', data: '14.82, 14.80, 14.81, 14.79\n14.80, 14.83, 14.80, 14.81\n14.78, 14.80, 14.81, 14.82\n14.80, 14.79, 14.80, 14.81' } },
       { name: 'Middle Lock Slot Height (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '8', usl: '8.2', lsl: '7.8', data: '8.05, 8.10, 8.00, 7.95\n8.02, 8.05, 8.01, 7.99\n8.10, 8.08, 8.05, 8.02\n8.00, 7.98, 8.01, 8.03' } },
       { name: 'Final Lock Slot Width (Q. F2)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '28', usl: '28.2', lsl: '27.8', data: '28.1, 28.0, 28.2, 27.9\n28.0, 28.1, 28.1, 28.0\n27.9, 28.0, 28.1, 28.2\n28.0, 27.9, 28.0, 28.1' } },
@@ -67,7 +67,7 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
     name: 'LH Side Profile HY10 - 142 943',
     characteristics: [
       { name: 'Measured Length', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '1188.5', usl: '1189.2', lsl: '1187.8', data: '1188.6, 1188.5, 1188.4, 1188.7\n1188.5, 1188.8, 1188.5, 1188.6\n1188.4, 1188.3, 1188.6, 1188.5\n1188.7, 1188.6, 1188.5, 1188.4' } },
-      { name: 'Final Lock Slot to Flush Cut Distance (Q. E1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '78', usl: '78.3', lsl: '77.7', data: '78.1, 78.0, 78.2, 77.9\n78.0, 78.1, 78.1, 78.0\n78.2, 78.1, 78.0, 78.1\n78.0, 77.9, 78.1, 78.2' } },
+      { name: 'Final Lock Slot to Flush Cut Distance (Q. E1)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '78', usl: '0.3', lsl: '-0.3', data: '78.1, 78.0, 78.2, 77.9\n78.0, 78.1, 78.1, 78.0\n78.2, 78.1, 78.0, 78.1\n78.0, 77.9, 78.1, 78.2' } },
       { name: 'Middle Lock Slot Width (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '14.8', usl: '14.9', lsl: '14.7', data: '14.82, 14.80, 14.81, 14.79\n14.80, 14.83, 14.80, 14.81\n14.78, 14.80, 14.81, 14.82\n14.80, 14.79, 14.80, 14.81' } },
       { name: 'Middle Lock Slot Height (Q. F4)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '8', usl: '8.2', lsl: '7.8', data: '8.05, 8.10, 8.00, 7.95\n8.02, 8.05, 8.01, 7.99\n8.10, 8.08, 8.05, 8.02\n8.00, 7.98, 8.01, 8.03' } },
       { name: 'Final Lock Slot Width (Q. F2)', type: 'variable', initialValues: { subgroupSize: '4', nominalValue: '28', usl: '28.2', lsl: '27.8', data: '28.1, 28.0, 28.2, 27.9\n28.0, 28.1, 28.1, 28.0\n27.9, 28.0, 28.1, 28.2\n28.0, 27.9, 28.0, 28.1' } },
