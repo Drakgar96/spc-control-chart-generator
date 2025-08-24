@@ -108,18 +108,14 @@ export default function SPCGenerator() {
   }, [characteristics, toast]);
 
   const handlePartSelection = useCallback((partKey: string) => {
-    console.log('Part selected:', partKey);
-    console.log('Available PART_CONFIGS:', Object.keys(PART_CONFIGS));
     setSelectedPart(partKey);
 
     if (partKey !== 'default' && PART_CONFIGS[partKey]) {
       const partConfig = PART_CONFIGS[partKey];
-      console.log('Found part config:', partConfig);
       
       // Create characteristics directly from predefined config
       const newCharacteristics: Characteristic[] = [];
       partConfig.characteristics.forEach((charConfig, index) => {
-        console.log(`Creating characteristic ${index + 1}:`, charConfig.name, charConfig.initialValues);
         const newCharacteristic: Characteristic = {
           id: `char_${index + 1}`,
           name: charConfig.name,
@@ -137,11 +133,9 @@ export default function SPCGenerator() {
         };
         newCharacteristics.push(newCharacteristic);
       });
-      console.log('Setting new characteristics:', newCharacteristics);
       setCharacteristics(newCharacteristics);
       setCharacteristicCounter(partConfig.characteristics.length);
     } else {
-      console.log('Using default characteristics');
       // Reset to default
       setCharacteristics([]);
       setCharacteristicCounter(0);

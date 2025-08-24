@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,18 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
   const [unit, setUnit] = useState(characteristic.unit);
   const [dataInput, setDataInput] = useState(characteristic.dataText);
 
+  // Update local state when characteristic prop changes
+  useEffect(() => {
+    setName(characteristic.name);
+    setType(characteristic.type);
+    setSubgroupSize(characteristic.subgroupSize?.toString() || '4');
+    setNominal(characteristic.nominal !== null ? characteristic.nominal.toString() : '');
+    setUpperTol(characteristic.upperTol !== null ? characteristic.upperTol.toString() : '');
+    setLowerTol(characteristic.lowerTol !== null ? characteristic.lowerTol.toString() : '');
+    setUnit(characteristic.unit);
+    setDataInput(characteristic.dataText);
+  }, [characteristic]);
+
   const handleDataUpdate = () => {
     try {
       if (type === 'variable') {
@@ -54,8 +66,12 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
         const allDataPoints = subgroups.flat();
         const sigmaWithin = calculateSigmaWithin(subgroups);
 
-        spcStats.allDataPoints = allDataPoints;
-        spcStats.sigmaWithin = sigmaWithin;
+        // Add additional properties to spcStats
+        const enhancedSpcStats = {
+          ...spcStats,
+          allDataPoints,
+          sigmaWithin
+        };
 
         // Calculate basic statistics on all data points
         let stats = null;
@@ -76,7 +92,7 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
           data: allDataPoints,
           subgroups,
           stats,
-          spcStats
+          spcStats: enhancedSpcStats
         };
 
         onUpdate(updatedCharacteristic);
