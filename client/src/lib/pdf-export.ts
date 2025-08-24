@@ -260,36 +260,62 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
     }
   }
   
+  // Determine if this is a variable characteristic by checking for X-bar charts
+  const isVariableCharacteristic = clonedCharacteristic.querySelector('[data-testid*="canvas-xbar-chart"]') !== null;
+  
   // Adjust chart container sizes for better fit on page
   const chartContainers = clonedCharacteristic.querySelectorAll('.chart-container');
   chartContainers.forEach(container => {
-    (container as HTMLElement).style.height = '220px'; // Slightly smaller charts
-    (container as HTMLElement).style.marginBottom = '8px';
+    if (isVariableCharacteristic) {
+      (container as HTMLElement).style.height = '198px'; // 10% smaller for variable (220 * 0.9)
+      (container as HTMLElement).style.marginBottom = '7px'; // 10% smaller spacing
+    } else {
+      (container as HTMLElement).style.height = '220px'; // Original size for attribute
+      (container as HTMLElement).style.marginBottom = '8px';
+    }
     (container as HTMLElement).style.overflow = 'visible';
   });
 
   // Adjust text sizes for better PDF rendering
-  clonedCharacteristic.style.fontSize = '11px'; // Slightly smaller text
-  clonedCharacteristic.style.lineHeight = '1.3';
+  if (isVariableCharacteristic) {
+    clonedCharacteristic.style.fontSize = '10px'; // 10% smaller for variable (11 * 0.9 ≈ 10)
+    clonedCharacteristic.style.lineHeight = '1.3';
+  } else {
+    clonedCharacteristic.style.fontSize = '11px'; // Original size for attribute
+    clonedCharacteristic.style.lineHeight = '1.3';
+  }
   
   const textElements = clonedCharacteristic.querySelectorAll('h3, .text-lg');
   textElements.forEach(el => {
-    (el as HTMLElement).style.fontSize = '14px'; // Reduced from 16px
-    (el as HTMLElement).style.marginBottom = '6px'; // Reduced spacing
+    if (isVariableCharacteristic) {
+      (el as HTMLElement).style.fontSize = '13px'; // 10% smaller for variable (14 * 0.9 ≈ 13)
+      (el as HTMLElement).style.marginBottom = '5px'; // 10% smaller spacing
+    } else {
+      (el as HTMLElement).style.fontSize = '14px'; // Original size for attribute
+      (el as HTMLElement).style.marginBottom = '6px';
+    }
     (el as HTMLElement).style.lineHeight = '1.2';
   });
 
   // Adjust spacing elements
   const spacingElements = clonedCharacteristic.querySelectorAll('.space-y-4, .space-y-6, .mb-4, .mb-6');
   spacingElements.forEach(el => {
-    (el as HTMLElement).style.marginBottom = '8px';
+    if (isVariableCharacteristic) {
+      (el as HTMLElement).style.marginBottom = '7px'; // 10% smaller for variable (8 * 0.9 ≈ 7)
+    } else {
+      (el as HTMLElement).style.marginBottom = '8px'; // Original size for attribute
+    }
   });
 
   // Adjust grid layouts for single page
   const gridElements = clonedCharacteristic.querySelectorAll('.grid');
   gridElements.forEach(el => {
     (el as HTMLElement).style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
-    (el as HTMLElement).style.gap = '6px'; // Reduced gap
+    if (isVariableCharacteristic) {
+      (el as HTMLElement).style.gap = '5px'; // 10% smaller gap for variable (6 * 0.9 ≈ 5)
+    } else {
+      (el as HTMLElement).style.gap = '6px'; // Original gap for attribute
+    }
   });
 
   pageContainer.appendChild(clonedCharacteristic);
