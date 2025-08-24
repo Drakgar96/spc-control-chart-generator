@@ -340,7 +340,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
     allowTaint: true,
     backgroundColor: '#ffffff',
     width: 800,
-    height: 1300, // Match the increased container height
+    height: 1400, // Match the container height to prevent cropping
     ignoreElements: (element) => {
       // Ignore any remaining canvas elements
       return element.tagName === 'CANVAS';
