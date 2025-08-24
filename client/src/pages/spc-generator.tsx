@@ -111,23 +111,8 @@ export default function SPCGenerator() {
     if (partKey !== 'default' && PART_CONFIGS[partKey]) {
       const partConfig = PART_CONFIGS[partKey];
       
-      // Clear existing characteristics
-      setCharacteristics([]);
-      setCharacteristicCounter(0);
-
-      // Add predefined characteristics
-      let counter = 0;
+      // Create characteristics directly from predefined config
       const newCharacteristics: Characteristic[] = [];
-      partConfig.characteristics.forEach(charConfig => {
-        counter++;
-        addNewCharacteristic(charConfig);
-      });
-      // Since addNewCharacteristic is async, we need to handle this differently
-      // Clear first, then add characteristics directly
-      setCharacteristics([]);
-      setCharacteristicCounter(0);
-      
-      // Create characteristics directly
       partConfig.characteristics.forEach((charConfig, index) => {
         const newCharacteristic: Characteristic = {
           id: `char_${index + 1}`,
