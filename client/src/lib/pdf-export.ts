@@ -10,23 +10,23 @@ export async function exportToPdf(): Promise<void> {
   if (!window.jspdf) {
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
   }
-  
+
   if (!window.html2canvas) {
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
   }
 
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p', 'mm', 'letter');
-  
+
   // Define Letter dimensions in mm (minus margins)
   const pageWidth = 196; // 216mm - 20mm margins
   const pageHeight = 269; // 279mm - 10mm margins (5mm top + 5mm bottom)
-  
+
   try {
     // Hide no-print elements
     const noPrintElements = document.querySelectorAll('.no-print') as NodeListOf<HTMLElement>;
     const printOnlyElements = document.querySelectorAll('.print-only') as NodeListOf<HTMLElement>;
-    
+
     noPrintElements.forEach(el => el.style.display = 'none');
     printOnlyElements.forEach(el => el.classList.remove('hidden'));
 
@@ -53,7 +53,7 @@ export async function exportToPdf(): Promise<void> {
     // Following Pages: Individual Characteristic Pages
     const characteristics = document.querySelectorAll('[data-testid^="canvas-xbar-chart-"],[data-testid^="canvas-p-chart-"]');
     const characteristicIds = new Set<string>();
-    
+
     characteristics.forEach(canvas => {
       const testId = canvas.getAttribute('data-testid') || '';
       const match = testId.match(/-(char_\d+)$/);
@@ -78,12 +78,12 @@ export async function exportToPdf(): Promise<void> {
     const filename = `SPC_Report_${dateStr}_${timeStr}.pdf`;
 
     pdf.save(filename);
-    
+
   } finally {
     // Restore display states
     const noPrintElements = document.querySelectorAll('.no-print') as NodeListOf<HTMLElement>;
     const printOnlyElements = document.querySelectorAll('.print-only') as NodeListOf<HTMLElement>;
-    
+
     noPrintElements.forEach(el => el.style.display = '');
     printOnlyElements.forEach(el => el.classList.add('hidden'));
   }
@@ -99,7 +99,7 @@ async function createCoverPage(): Promise<string> {
   coverContainer.style.top = '-9999px';
   coverContainer.style.background = 'white';
   coverContainer.style.padding = '40px';
-  
+
   // Add title
   const title = document.createElement('h1');
   title.textContent = 'SPC Control Chart Analysis Report';
@@ -117,15 +117,15 @@ async function createCoverPage(): Promise<string> {
     clonedDocControl.style.backgroundColor = 'transparent';
     clonedDocControl.style.border = '1px solid #e5e7eb';
     clonedDocControl.style.marginBottom = '40px';
-    
+
     // Show print-only content
     const printOnlyElements = clonedDocControl.querySelectorAll('.print-only');
     printOnlyElements.forEach(el => (el as HTMLElement).classList.remove('hidden'));
-    
+
     // Hide no-print elements
     const noPrintElements = clonedDocControl.querySelectorAll('.no-print');
     noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
-    
+
     coverContainer.appendChild(clonedDocControl);
   }
 
@@ -133,7 +133,7 @@ async function createCoverPage(): Promise<string> {
   const partSection = document.createElement('div');
   partSection.style.marginTop = '40px';
   partSection.style.textAlign = 'center';
-  
+
   const selectedPartName = document.getElementById('selectedPartName')?.textContent || 'Custom Characteristics';
   const partTitle = document.createElement('h2');
   partTitle.textContent = `Analyzed Part: ${selectedPartName}`;
@@ -154,7 +154,7 @@ async function createCoverPage(): Promise<string> {
     clonedImage.style.borderRadius = '8px';
     partSection.appendChild(clonedImage);
   }
-  
+
   coverContainer.appendChild(partSection);
   document.body.appendChild(coverContainer);
 
@@ -180,7 +180,7 @@ async function createSummaryPage(): Promise<string> {
   summaryContainer.style.top = '-9999px';
   summaryContainer.style.background = 'white';
   summaryContainer.style.padding = '40px';
-  
+
   // Add title
   const title = document.createElement('h1');
   title.textContent = 'Analysis Summary';
@@ -216,7 +216,7 @@ async function createSummaryPage(): Promise<string> {
 
 async function createCharacteristicPage(characteristicId: string): Promise<string | null> {
   const characteristicElement = document.querySelector(`[data-testid="text-chart-title-${characteristicId}"]`)?.closest('.bg-white') as HTMLElement;
-  
+
   if (!characteristicElement) {
     return null;
   }
@@ -224,7 +224,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
   const pageContainer = document.createElement('div');
   pageContainer.className = 'pdf-characteristic-page';
   pageContainer.style.width = '800px';
-  pageContainer.style.height = '1300px'; // Increased height to prevent cropping
+  pageContainer.style.height = '1400px'; // Further increased height for better content fit
   pageContainer.style.position = 'absolute';
   pageContainer.style.top = '-9999px';
   pageContainer.style.background = 'white';
@@ -232,19 +232,19 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
 
   // Clone the characteristic content
   const clonedCharacteristic = characteristicElement.cloneNode(true) as HTMLElement;
-  
+
   // Find and replace chart canvases with their rendered images
   const originalChartCanvases = characteristicElement.querySelectorAll('canvas');
   const clonedChartCanvases = clonedCharacteristic.querySelectorAll('canvas');
-  
+
   for (let i = 0; i < originalChartCanvases.length && i < clonedChartCanvases.length; i++) {
     const originalCanvas = originalChartCanvases[i] as HTMLCanvasElement;
     const clonedCanvas = clonedChartCanvases[i] as HTMLCanvasElement;
-    
+
     try {
       // Get the chart data URL from the original canvas
       const dataURL = originalCanvas.toDataURL('image/png');
-      
+
       // Create an image element to replace the canvas
       const img = document.createElement('img');
       img.src = dataURL;
@@ -252,17 +252,17 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
       img.style.height = originalCanvas.style.height || '250px';
       img.style.maxWidth = '100%';
       img.style.display = 'block';
-      
+
       // Replace the cloned canvas with the image
       clonedCanvas.parentNode?.replaceChild(img, clonedCanvas);
     } catch (error) {
       console.warn('Failed to convert canvas to image:', error);
     }
   }
-  
+
   // Determine if this is a variable characteristic by checking for X-bar charts
   const isVariableCharacteristic = clonedCharacteristic.querySelector('[data-testid*="canvas-xbar-chart"]') !== null;
-  
+
   // Adjust chart container sizes for better fit on page
   const chartContainers = clonedCharacteristic.querySelectorAll('.chart-container');
   chartContainers.forEach(container => {
@@ -284,7 +284,7 @@ async function createCharacteristicPage(characteristicId: string): Promise<strin
     clonedCharacteristic.style.fontSize = '11px'; // Original size for attribute
     clonedCharacteristic.style.lineHeight = '1.3';
   }
-  
+
   const textElements = clonedCharacteristic.querySelectorAll('h3, .text-lg');
   textElements.forEach(el => {
     if (isVariableCharacteristic) {
@@ -362,22 +362,22 @@ async function updatePrintOnlyContent(): Promise<void> {
     const input = document.getElementById('documentNumber') as HTMLInputElement;
     documentNumberEl.textContent = input?.value || 'MTU-SPC-001';
   }
-  
+
   if (revisionNumberEl) {
     const input = document.getElementById('revisionNumber') as HTMLInputElement;
     revisionNumberEl.textContent = input?.value || '1.0';
   }
-  
+
   if (effectiveDateEl) {
     const input = document.getElementById('effectiveDate') as HTMLInputElement;
     effectiveDateEl.textContent = input?.value || '';
   }
-  
+
   if (reportStartDateEl) {
     const input = document.getElementById('reportStartDate') as HTMLInputElement;
     reportStartDateEl.textContent = input?.value || '';
   }
-  
+
   if (reportEndDateEl) {
     const input = document.getElementById('reportEndDate') as HTMLInputElement;
     reportEndDateEl.textContent = input?.value || '';
