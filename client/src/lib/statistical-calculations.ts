@@ -285,8 +285,10 @@ export function calculateStatistics(data: number[], nominal: number, upperTol: n
   const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
   const stdDev = Math.sqrt(variance);
   
+  // Convert tolerance to specification limits
+  // upperTol and lowerTol are the tolerance deviations from nominal
   const USL = nominal + upperTol;
-  const LSL = nominal + lowerTol;
+  const LSL = nominal - Math.abs(lowerTol); // Ensure LSL is below nominal
   const tolerance = USL - LSL;
   
   // Process capability indices
