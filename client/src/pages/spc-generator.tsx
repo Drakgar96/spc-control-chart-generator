@@ -264,7 +264,7 @@ export default function SPCGenerator() {
         </div>
 
         <div className="text-center text-gray-500 text-sm mt-12 no-print">
-          <p>&copy; 2024 MTU Quality Control. All rights reserved.</p>
+          <p>App designed and developed by Edgar Contreras Navez</p>
         </div>
       </div>
     </div>
