@@ -27,9 +27,9 @@ export default function CharacteristicForm({ characteristic, onUpdate, onDelete 
   const [name, setName] = useState(characteristic.name);
   const [type, setType] = useState<'variable' | 'attribute'>(characteristic.type);
   const [subgroupSize, setSubgroupSize] = useState(characteristic.subgroupSize?.toString() || '4');
-  const [nominal, setNominal] = useState(characteristic.nominal?.toString() || '');
-  const [upperTol, setUpperTol] = useState(characteristic.upperTol?.toString() || '');
-  const [lowerTol, setLowerTol] = useState(characteristic.lowerTol?.toString() || '');
+  const [nominal, setNominal] = useState(characteristic.nominal !== null ? characteristic.nominal.toString() : '');
+  const [upperTol, setUpperTol] = useState(characteristic.upperTol !== null ? characteristic.upperTol.toString() : '');
+  const [lowerTol, setLowerTol] = useState(characteristic.lowerTol !== null ? characteristic.lowerTol.toString() : '');
   const [unit, setUnit] = useState(characteristic.unit);
   const [dataInput, setDataInput] = useState(characteristic.dataText);
 
