@@ -127,14 +127,14 @@ export const PART_CONFIGS: Record<string, { name: string; characteristics: { nam
     name: 'Pull Force Test',
     characteristics: [
       {
-        name: 'Pull Force Measurement',
+        name: 'Pull Force',
         type: 'variable',
         initialValues: { 
           subgroupSize: '5', 
           usl: '14', 
           lsl: '10', 
           nominalValue: '12', 
-          unit: 'N',
+          unit: 'Kgf',
           data: '12.1, 11.8, 12.3, 11.9, 12.2\n12.0, 12.4, 11.7, 12.1, 12.0\n11.9, 12.2, 12.1, 11.8, 12.3\n12.2, 12.0, 11.9, 12.1, 12.0\n12.1, 11.9, 12.2, 12.0, 11.8' 
         }
       }
@@ -146,67 +146,41 @@ export const partDefinitions: Record<string, PartDefinition> = {
   'axle-profile': {
     name: 'Axle Profile HY10 - 148 253',
     image: PART_IMAGES['axle-profile']!,
-    characteristics: [
-      { name: 'Length (A)', nominal: 150.0, upperTol: 0.5, lowerTol: -0.5, unit: 'mm' },
-      { name: 'Diameter (B)', nominal: 25.0, upperTol: 0.2, lowerTol: -0.2, unit: 'mm' },
-      { name: 'Surface Roughness', nominal: 1.6, upperTol: 0.4, lowerTol: -0.4, unit: 'μm' }
-    ]
+    characteristics: []
   },
   'lamella-profile': {
     name: 'Lamella Profile HY10 - 123 257',
     image: PART_IMAGES['lamella-profile']!,
-    characteristics: [
-      { name: 'Width (C)', nominal: 80.0, upperTol: 0.3, lowerTol: -0.3, unit: 'mm' },
-      { name: 'Thickness (D)', nominal: 12.0, upperTol: 0.1, lowerTol: -0.1, unit: 'mm' },
-      { name: 'Flatness', nominal: 0.05, upperTol: 0.02, lowerTol: -0.02, unit: 'mm' }
-    ]
+    characteristics: []
   },
   'rh-side-profile': {
     name: 'RH Side Profile HY10 - 142 942',
     image: PART_IMAGES['rh-side-profile']!,
-    characteristics: [
-      { name: 'Height (E)', nominal: 95.0, upperTol: 0.4, lowerTol: -0.4, unit: 'mm' },
-      { name: 'Angle (F)', nominal: 45.0, upperTol: 1.0, lowerTol: -1.0, unit: '°' }
-    ]
+    characteristics: []
   },
   'lh-side-profile': {
     name: 'LH Side Profile HY10 - 142 943',
     image: PART_IMAGES['lh-side-profile']!,
-    characteristics: [
-      { name: 'Height (G)', nominal: 95.0, upperTol: 0.4, lowerTol: -0.4, unit: 'mm' },
-      { name: 'Angle (H)', nominal: 45.0, upperTol: 1.0, lowerTol: -1.0, unit: '°' }
-    ]
+    characteristics: []
   },
   'lid-profile': {
     name: 'Lid Profile HY10 - 142 421',
     image: PART_IMAGES['lid-profile']!,
-    characteristics: [
-      { name: 'Outer Diameter (I)', nominal: 120.0, upperTol: 0.3, lowerTol: -0.3, unit: 'mm' },
-      { name: 'Inner Diameter (J)', nominal: 110.0, upperTol: 0.2, lowerTol: -0.2, unit: 'mm' },
-      { name: 'Concentricity', nominal: 0.0, upperTol: 0.1, lowerTol: -0.1, unit: 'mm' }
-    ]
+    characteristics: []
   },
   'front-profile': {
     name: 'Front Profile HY10 - 142 408',
     image: PART_IMAGES['front-profile']!,
-    characteristics: [
-      { name: 'Overall Length (K)', nominal: 200.0, upperTol: 0.6, lowerTol: -0.6, unit: 'mm' },
-      { name: 'Mounting Hole Dia.', nominal: 8.0, upperTol: 0.1, lowerTol: -0.1, unit: 'mm' }
-    ]
+    characteristics: []
   },
   'rear-profile': {
     name: 'Rear Profile HY10 - 142 221',
     image: PART_IMAGES['rear-profile']!,
-    characteristics: [
-      { name: 'Overall Width (L)', nominal: 180.0, upperTol: 0.5, lowerTol: -0.5, unit: 'mm' },
-      { name: 'Step Height (M)', nominal: 15.0, upperTol: 0.2, lowerTol: -0.2, unit: 'mm' }
-    ]
+    characteristics: []
   },
   'pull-force': {
     name: 'Pull Force Test',
     image: PART_IMAGES['pull-force']!,
-    characteristics: [
-      { name: 'Pull Force (N)', nominal: 12.0, upperTol: 2.0, lowerTol: -2.0, unit: 'N' }
-    ]
+    characteristics: []
   }
 };
